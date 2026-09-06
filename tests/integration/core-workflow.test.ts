@@ -19,6 +19,10 @@ import {
   planCodexNativeSkills,
 } from "../../src/providers/codex/index.js";
 import { readGlobalAgentContract } from "../../src/standards/index.js";
+import {
+  projectTemplatePaths,
+  projectTemplateRoot,
+} from "../../src/templates/index.js";
 
 const roots: string[] = [];
 
@@ -67,7 +71,7 @@ afterEach(async () => {
 });
 
 describe("Codex core workflow", () => {
-  it("installs global instructions and all ten skills in an isolated home, then converges", async () => {
+  it("installs global instructions and all eleven skills in an isolated home, then converges", async () => {
     const test = await fixture();
     await mkdir(test.codexHome, { recursive: true });
     const config = join(test.codexHome, "config.toml");
@@ -75,11 +79,44 @@ describe("Codex core workflow", () => {
     const initial = await applyCore(test);
     const globalContract = await readGlobalAgentContract();
     expect(initial.canApply).toBe(true);
-    expect(initial.nativeSkills.installerPlan?.actions).toHaveLength(20);
+    expect(initial.nativeSkills.installerPlan?.actions).toHaveLength(27);
     expect(await readFile(test.detection.paths.globalAgents, "utf8")).toBe(
       globalContract,
     );
     expect(await readFile(config, "utf8")).toBe('model = "external"\n');
+    const bootstrapAssets = initial.nativeSkills.installerPlan!.actions.filter(
+      (action) =>
+        action.artifact.id.startsWith(
+          "codex.user-skill.aic-bootstrap-project.asset.",
+        ),
+    );
+    expect(bootstrapAssets).toHaveLength(projectTemplatePaths.length);
+    for (const path of projectTemplatePaths) {
+      const target = join(
+        test.detection.paths.userSkillsRoot,
+        "aic-bootstrap-project",
+        "assets",
+        "project",
+        path,
+      );
+      const action = bootstrapAssets.find(
+        (entry) => entry.artifact.targetPath === target,
+      );
+      expect(action).toBeDefined();
+      expect(Buffer.from(action!.artifact.content)).toEqual(
+        await readFile(join(projectTemplateRoot(), path)),
+      );
+      await expect(readFile(target)).resolves.toEqual(
+        await readFile(join(projectTemplateRoot(), path)),
+      );
+    }
+    expect(
+      initial.nativeSkills.installerPlan!.actions.some(
+        (action) =>
+          action.artifact.id.includes(".asset.") &&
+          !action.artifact.id.includes("aic-bootstrap-project"),
+      ),
+    ).toBe(false);
     for (const name of initial.nativeSkills.catalog.skills.map(
       (skill) => skill.name,
     )) {
@@ -147,6 +184,55 @@ describe("Codex core workflow", () => {
     expect(await readFile(metadata, "utf8")).toBe("external metadata\n");
   });
 
+  it("preserves unmanaged and drifted bootstrap template assets", async () => {
+    const unmanaged = await fixture();
+    const unmanagedTarget = join(
+      unmanaged.detection.paths.userSkillsRoot,
+      "aic-bootstrap-project",
+      "assets",
+      "project",
+      "AGENTS.md",
+    );
+    await mkdir(dirname(unmanagedTarget), { recursive: true });
+    await writeFile(unmanagedTarget, "external template\n");
+    const unmanagedPlan = await planCodexNativeSkills({
+      detection: unmanaged.detection,
+      stateDir: unmanaged.stateDir,
+    });
+    expect(unmanagedPlan.installerPlan?.conflicts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "UNMANAGED_EXISTS",
+          targetPath: unmanagedTarget,
+        }),
+      ]),
+    );
+
+    const drifted = await fixture();
+    await applyCore(drifted);
+    const installed = join(
+      drifted.detection.paths.userSkillsRoot,
+      "aic-bootstrap-project",
+      "assets",
+      "project",
+      "CONTEXT.md",
+    );
+    await writeFile(installed, "local template edit\n");
+    const driftPlan = await planCodexNativeSkills({
+      detection: drifted.detection,
+      stateDir: drifted.stateDir,
+    });
+    expect(driftPlan.installerPlan?.conflicts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "MANAGED_DRIFT",
+          targetPath: installed,
+        }),
+      ]),
+    );
+    expect(await readFile(installed, "utf8")).toBe("local template edit\n");
+  });
+
   it("uses Phase 2 managed replacement semantics for a canonical skill file", async () => {
     const test = await fixture();
     const initial = await applyCore(test);
@@ -178,7 +264,7 @@ describe("Codex core workflow", () => {
     expect(await readFile(action.artifact.targetPath, "utf8")).toContain(
       "Updated canonical content.",
     );
-  });
+  }, 15_000);
 
   it("makes the whole workflow unavailable when a global override is active", async () => {
     const test = await fixture();

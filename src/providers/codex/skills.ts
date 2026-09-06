@@ -12,7 +12,7 @@ export interface CodexNativeSkillsPlan {
   readonly installerPlan?: InstallPlan;
   readonly canApply: boolean;
 }
-/** Plans the two regular-file artifacts for each canonical Phase 4 user skill. */
+/** Plans the regular-file artifacts for each canonical native user skill. */
 export async function planCodexNativeSkills(input: {
   readonly detection: CodexDetection;
   readonly stateDir: string;
@@ -46,6 +46,13 @@ export async function planCodexNativeSkills(input: {
         ownership: "managed" as const,
         mode: 0o644,
       },
+      ...skill.bundledAssets.map((asset) => ({
+        id: `codex.user-skill.${skill.name}.asset.${asset.path.replaceAll("/", ".")}`,
+        targetPath: join(root, skill.name, asset.path),
+        content: asset.content,
+        ownership: "managed" as const,
+        mode: 0o644,
+      })),
     ]),
   );
   return {

@@ -5,4 +5,4 @@ coverage/
 .omx/
 .venv/
 docs/architecture/AI-CONFIG-MASTER-ARCHITECTURE-V1.md
-docs/plans/PHASE-1-REPOSITORY-FOUNDATION.md
+docs/plans/*.md

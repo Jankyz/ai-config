@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI Config Project Bootstrap"
+  short_description: "Preview or seed a project knowledge scaffold."
+  default_prompt: "Use $aic-bootstrap-project to preview or bootstrap this repository."
+policy:
+  allow_implicit_invocation: false

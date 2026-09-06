@@ -1,4 +1,4 @@
-# Project templates
+# Project bootstrap templates
 
-Future project-bootstrap templates belong here. They must not invent project knowledge and are
-outside Phase 1.
+These static templates seed repository-owned project knowledge. Bootstrap copies only
+the canonical scaffold files; it never invents or subsequently manages project facts.

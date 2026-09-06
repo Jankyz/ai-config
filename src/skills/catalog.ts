@@ -1,6 +1,11 @@
 import { readdir, readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
+import {
+  projectTemplatePaths,
+  projectTemplateRoot,
+  validateProjectTemplates,
+} from "../templates/index.js";
 
 export const nativeSkillNames = [
   "aic-research",
@@ -13,13 +18,19 @@ export const nativeSkillNames = [
   "aic-verify",
   "aic-security-review",
   "aic-lore-commit",
+  "aic-bootstrap-project",
 ] as const;
 export type NativeSkillName = (typeof nativeSkillNames)[number];
+export interface NativeSkillBundledAsset {
+  readonly path: string;
+  readonly content: Uint8Array;
+}
 export interface NativeSkillAsset {
   readonly name: NativeSkillName;
   readonly directory: string;
   readonly skillMarkdown: string;
   readonly codexMetadata: string;
+  readonly bundledAssets: readonly NativeSkillBundledAsset[];
 }
 export interface NativeSkillCatalogValidation {
   readonly valid: boolean;
@@ -49,6 +60,8 @@ export function nativeSkillRoot(): string {
 /** Reads and validates the deliberately small, static Phase 4 native-skill catalog. */
 export async function validateNativeSkillCatalog(): Promise<NativeSkillCatalogValidation> {
   const errors: string[] = [];
+  const templateValidation = await validateProjectTemplates();
+  errors.push(...templateValidation.errors);
   let directories: string[] = [];
   try {
     directories = (await readdir(skillRoot, { withFileTypes: true }))
@@ -61,7 +74,7 @@ export async function validateNativeSkillCatalog(): Promise<NativeSkillCatalogVa
   const expected = [...nativeSkillNames].sort();
   if (directories.join("\n") !== expected.join("\n"))
     errors.push(
-      "Native skill directories must contain exactly the approved ten skills.",
+      "Native skill directories must contain exactly the approved eleven skills.",
     );
   const seen = new Set<string>();
   const skills: NativeSkillAsset[] = [];
@@ -70,9 +83,17 @@ export async function validateNativeSkillCatalog(): Promise<NativeSkillCatalogVa
     const skillPath = join(directory, "SKILL.md");
     const metadataPath = join(directory, "agents", "openai.yaml");
     try {
-      const [skillMarkdown, codexMetadata] = await Promise.all([
+      const [skillMarkdown, codexMetadata, bundledAssets] = await Promise.all([
         readFile(skillPath, "utf8"),
         readFile(metadataPath, "utf8"),
+        name === "aic-bootstrap-project"
+          ? Promise.all(
+              projectTemplatePaths.map(async (path) => ({
+                path: join("assets", "project", path),
+                content: await readFile(join(projectTemplateRoot(), path)),
+              })),
+            )
+          : Promise.resolve([]),
       ]);
       const declaredName = frontmatterValue(skillMarkdown, "name");
       const description = frontmatterValue(skillMarkdown, "description");
@@ -101,7 +122,13 @@ export async function validateNativeSkillCatalog(): Promise<NativeSkillCatalogVa
         errors.push(`${name}: files must not contain personal absolute paths.`);
       if (skillMarkdown.length > 12_000 || codexMetadata.length > 2_000)
         errors.push(`${name}: files exceed the Phase 4 size budget.`);
-      skills.push({ name, directory, skillMarkdown, codexMetadata });
+      skills.push({
+        name,
+        directory,
+        skillMarkdown,
+        codexMetadata,
+        bundledAssets,
+      });
     } catch (error) {
       errors.push(
         `${name}: missing or unreadable required asset: ${String(error)}`,

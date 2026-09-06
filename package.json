@@ -18,9 +18,11 @@
     "dist/providers",
     "dist/skills",
     "dist/standards",
+    "dist/templates",
     "dist/state",
     "standards",
-    "skills"
+    "skills",
+    "templates/project"
   ],
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.json",
