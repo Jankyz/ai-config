@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI Config Implement"
+  short_description: "Execute an approved plan within scope."
+  default_prompt: "Use $aic-implement to execute the approved implementation plan."
+policy:
+  allow_implicit_invocation: false

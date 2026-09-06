@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI Config Plan"
+  short_description: "Create a scoped implementation plan."
+  default_prompt: "Use $aic-plan to create an implementation plan for this material change."
+policy:
+  allow_implicit_invocation: false

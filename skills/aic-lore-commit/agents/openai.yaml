@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI Config Lore Commit"
+  short_description: "Create an explicitly authorized Lore commit."
+  default_prompt: "Use $aic-lore-commit to create the explicitly authorized Lore commit."
+policy:
+  allow_implicit_invocation: false

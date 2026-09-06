@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI Config Clarify"
+  short_description: "Resolve material decisions with evidence and trade-offs."
+  default_prompt: "Use $aic-clarify to resolve the material decision in this task."
+policy:
+  allow_implicit_invocation: false

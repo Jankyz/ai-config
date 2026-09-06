@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI Config Security Review"
+  short_description: "Focused read-only security analysis."
+  default_prompt: "Use $aic-security-review to assess the relevant security risks in this scope."
+policy:
+  allow_implicit_invocation: false

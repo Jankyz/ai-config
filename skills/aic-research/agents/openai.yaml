@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI Config Research"
+  short_description: "Evidence-backed research for a defined question."
+  default_prompt: "Use $aic-research to investigate this question with current evidence."
+policy:
+  allow_implicit_invocation: false

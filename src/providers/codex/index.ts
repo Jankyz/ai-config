@@ -21,3 +21,7 @@ export { CodexPathError, resolveCodexPaths } from "./paths.js";
 export type { CodexPaths, CodexRuntimeContext } from "./paths.js";
 export { verifyCodexGlobalInstructions } from "./verify.js";
 export type { CodexVerification, CodexVerificationStatus } from "./verify.js";
+export { planCodexNativeSkills } from "./skills.js";
+export type { CodexNativeSkillsPlan } from "./skills.js";
+export { planCodexCoreWorkflow } from "./core-workflow.js";
+export type { CodexCoreWorkflowPlan } from "./core-workflow.js";

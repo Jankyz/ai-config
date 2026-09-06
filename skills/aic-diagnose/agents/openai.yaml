@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI Config Diagnose"
+  short_description: "Find a defect's evidence-backed root cause."
+  default_prompt: "Use $aic-diagnose to investigate the root cause of this defect."
+policy:
+  allow_implicit_invocation: false

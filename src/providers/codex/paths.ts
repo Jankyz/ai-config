@@ -10,6 +10,7 @@ export interface CodexPaths {
   readonly globalAgents: string;
   readonly globalOverride: string;
   readonly configToml: string;
+  readonly userSkillsRoot: string;
 }
 
 export class CodexPathError extends Error {
@@ -44,5 +45,6 @@ export function resolveCodexPaths(context: CodexRuntimeContext): CodexPaths {
     globalAgents: join(normalized, "AGENTS.md"),
     globalOverride: join(normalized, "AGENTS.override.md"),
     configToml: join(normalized, "config.toml"),
+    userSkillsRoot: join(resolve(context.homeDir), ".agents", "skills"),
   };
 }

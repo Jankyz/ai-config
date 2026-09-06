@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI Config Verify"
+  short_description: "Evidence-based final verification."
+  default_prompt: "Use $aic-verify to verify this work against the approved plan."
+policy:
+  allow_implicit_invocation: false

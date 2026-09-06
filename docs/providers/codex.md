@@ -18,7 +18,7 @@ resolution and provider inspection do not create directories.
 
 ## Ownership and precedence
 
-`AGENTS.md` is the only Phase 3 managed artifact. Its stable installer ID is
+`AGENTS.md` is the Phase 3 managed artifact. Its stable installer ID is
 `codex.global.instructions`, its bytes are supplied unchanged by the caller, and its normal mode is
 `0644`. All ownership, drift, backup, rollback, and transaction behavior comes from the Phase 2
 installer.
@@ -46,9 +46,20 @@ Verification replans the same artifact. `VERIFIED` means Codex was detected, the
 active or unsafe global override exists, the desired instructions are non-empty, and Phase 2 sees a
 conflict-free `NOOP`. It does not establish that a model followed the instructions.
 
+## Phase 4 user skills
+
+Phase 4 also plans the ten canonical native skills as managed regular files under:
+
+```text
+$HOME/.agents/skills/<skill-name>/SKILL.md
+$HOME/.agents/skills/<skill-name>/agents/openai.yaml
+```
+
+The adapter uses the supplied runtime home, never the process home. Canonical assets remain in `skills/`; the installer copies their exact contents. Each metadata file sets `policy.allow_implicit_invocation: false`, so each workflow is available only through explicit `$aic-*` invocation. The `.agents` directory is the narrowly scoped allowed root; `config.toml` and all other Codex configuration remain external.
+
 ## Current exclusions
 
-Phase 3 does not manage skills, plugins, project-level instruction files, Codex installation,
+This phase does not manage plugins, project-level instruction files, Codex installation,
 authentication, or `config.toml` merging.
 
 ## Upstream contract verification

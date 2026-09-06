@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI Config Analyze"
+  short_description: "Read-only repository investigation with evidence."
+  default_prompt: "Use $aic-analyze to inspect and explain this repository question."
+policy:
+  allow_implicit_invocation: false

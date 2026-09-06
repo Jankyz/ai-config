@@ -1,7 +1,5 @@
-# Skills
+# Native skills
 
-This directory will hold skills managed by `ai-config`. Future skills are classified as native,
-vendored/adapted, or external-managed. Workflow skills are explicitly invoked unless their design
-explicitly authorizes model invocation.
+These are the canonical Phase 4 `ai-config` workflow skills. Each is explicitly invoked in Codex with its `$aic-*` name and installed as two managed files under the Codex user skill root.
 
-Phase 1 installs no skills or external dependencies.
+Skills provide focused procedures. The [standards](../standards/README.md) remain the durable cross-project rules.

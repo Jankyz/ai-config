@@ -12,7 +12,15 @@
   },
   "files": [
     "bin",
-    "dist/cli"
+    "dist/cli",
+    "dist/core",
+    "dist/installer",
+    "dist/providers",
+    "dist/skills",
+    "dist/standards",
+    "dist/state",
+    "standards",
+    "skills"
   ],
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.json",
