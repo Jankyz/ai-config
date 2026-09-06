@@ -2,7 +2,7 @@
 
 The global agent contract is the compact, always-loaded baseline. It sets durable rules for planning, execution, verification, ownership, and commits.
 
-Standards explain those durable rules. Skills provide focused procedures and are explicitly invoked by their `aic-*` names; Codex does not invoke a Phase 4 workflow implicitly.
+Standards explain those durable rules. Skills provide focused procedures and are explicitly invoked by their `aic-*` names; Codex uses explicit `$aic-*` invocation and Claude uses explicit `/aic-*` invocation. Neither provider representation permits implicit workflow invocation.
 
 The core sequence is: research or clarify when needed; plan; owner approval; implement; evidence-based verification; focused review or security review when required; owner-authorized Lore commit.
 

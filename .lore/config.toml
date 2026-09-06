@@ -1,0 +1,21 @@
+[protocol]
+version = "1.0"
+
+[trailers]
+required = []
+custom = []
+
+[validation]
+strict = false
+max_message_lines = 50
+intent_max_length = 72
+
+[stale]
+older_than = "6m"
+drift_threshold = 20
+
+[output]
+default_format = "text"
+
+[follow]
+max_depth = 3
