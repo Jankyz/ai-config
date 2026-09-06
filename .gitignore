@@ -1,0 +1,11 @@
+dist/
+node_modules/
+.npm-cache/
+coverage/
+.env
+.env.*
+!.env.example
+.DS_Store
+.idea/
+.omx/
+.venv/

@@ -1,0 +1,38 @@
+{
+  "name": "ai-config-development",
+  "version": "0.0.0",
+  "description": "Provider-neutral AI coding-agent environment configuration manager.",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "bin": {
+    "ai-config": "./bin/ai-config"
+  },
+  "files": [
+    "bin",
+    "dist/cli"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.json",
+    "test": "npm run build && vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "npm run build && vitest run tests/integration",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "pack:check": "npm pack --dry-run --cache .npm-cache",
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm test && npm run build"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/node": "^24.0.0",
+    "eslint": "^10.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^4.0.0"
+  }
+}

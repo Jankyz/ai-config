@@ -1,0 +1,4 @@
+# Illustrative location only; the canonical manifest schema is defined by its first consumer.
+providers:
+  - codex
+  - claude
