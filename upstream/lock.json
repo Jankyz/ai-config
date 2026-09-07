@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "sources": [
+    {
+      "sourceId": "matt-skills",
+      "kind": "github",
+      "commit": "3cca18b368ae95cdbdebbff572ccafa662551015",
+      "resources": [{ "resourceId": "matt-skills-reference" }],
+      "license": {
+        "spdx": "MIT",
+        "path": "LICENSE",
+        "scope": "repository",
+        "digest": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5"
+      },
+      "resolvedAt": "2026-09-07T06:47:51.036Z"
+    },
+    {
+      "sourceId": "oh-my-codex",
+      "kind": "github",
+      "commit": "304fb3b4825c4132c273732b14d2d5e86b54f8e3",
+      "resources": [{ "resourceId": "oh-my-codex-reference" }],
+      "license": {
+        "spdx": "MIT",
+        "path": "LICENSE",
+        "scope": "repository",
+        "digest": "4fd42de3188b327edb30d8997f8669b590ccfde847bb85af2e73a5c7161d4ec0"
+      },
+      "resolvedAt": "2026-09-07T06:47:51.884Z"
+    }
+  ]
+}

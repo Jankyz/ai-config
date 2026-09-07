@@ -32,6 +32,8 @@ describe("package contents", () => {
         "templates/project/ARCHITECTURE.md",
         "templates/project/DESIGN.md",
         "templates/project/docs/README.md",
+        "upstream/registry.json",
+        "upstream/lock.json",
       ]),
     );
     expect(paths.some((path) => path.startsWith("tests/"))).toBe(false);

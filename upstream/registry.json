@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "sources": [
+    {
+      "id": "matt-skills",
+      "kind": "github",
+      "repository": "mattpocock/skills",
+      "track": { "type": "branch", "value": "main" },
+      "license": {
+        "expected": "MIT",
+        "scope": "repository",
+        "evidence": "LICENSE"
+      },
+      "resources": [{ "id": "matt-skills-reference", "mode": "reference" }]
+    },
+    {
+      "id": "oh-my-codex",
+      "kind": "github",
+      "repository": "Yeachan-Heo/oh-my-codex",
+      "track": { "type": "branch", "value": "main" },
+      "license": {
+        "expected": "MIT",
+        "scope": "repository",
+        "evidence": "LICENSE"
+      },
+      "resources": [{ "id": "oh-my-codex-reference", "mode": "reference" }]
+    }
+  ]
+}
