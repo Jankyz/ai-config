@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI Config UI Generate"
+  short_description: "Explore 21st UI concepts or pull an approved selected result."
+  default_prompt: "Use $aic-ui-generate to explore a UI concept."
+policy:
+  allow_implicit_invocation: false

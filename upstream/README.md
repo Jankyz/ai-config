@@ -5,5 +5,4 @@ commits, versions, resource digests, and exact license-evidence digests that a f
 The registry and lock must validate as one consistent pair. Tracking branches are only update-discovery
 inputs; setup must never install from a moving reference.
 
-The initial Matt Pocock Skills and Oh My Codex registrations are reference-only. They fetch, install,
-vendor, execute, and activate nothing. See [external source architecture](../docs/architecture/external-sources.md).
+Matt Pocock Skills and Oh My Codex are reference-only. They fetch, install, vendor, execute, and activate nothing. The two selected 21st resources are adapted into local canonical UI skills; their pinned revision and resource digests are review input for future changes. See [external source architecture](../docs/architecture/external-sources.md).

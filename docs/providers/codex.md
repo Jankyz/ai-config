@@ -48,14 +48,14 @@ conflict-free `NOOP`. It does not establish that a model followed the instructio
 
 ## Phase 4 user skills
 
-Phase 4 also plans the ten canonical native skills as managed regular files under:
+The canonical catalog plans managed regular files under:
 
 ```text
 $HOME/.agents/skills/<skill-name>/SKILL.md
 $HOME/.agents/skills/<skill-name>/agents/openai.yaml
 ```
 
-The adapter uses the supplied runtime home, never the process home. Canonical assets remain in `skills/`; the installer copies their exact contents. Each metadata file sets `policy.allow_implicit_invocation: false`, so each workflow is available only through explicit `$aic-*` invocation. The `.agents` directory is the narrowly scoped allowed root; `config.toml` and all other Codex configuration remain external.
+The adapter uses the supplied runtime home, never the process home. Canonical assets remain in `skills/`; the installer copies their exact contents. Each metadata file sets `policy.allow_implicit_invocation: false`, so each workflow is available only through explicit `$aic-*` invocation. This includes the Phase 8 UI extensions `aic-ui-components`, `aic-ui-generate`, and `aic-ui-review`. The `.agents` directory is the narrowly scoped allowed root; `config.toml` and all other Codex configuration remain external.
 
 ## Current exclusions
 

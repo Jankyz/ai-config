@@ -23,6 +23,8 @@
     "dist/state",
     "upstream/registry.json",
     "upstream/lock.json",
+    "THIRD_PARTY_NOTICES.md",
+    "third_party/21st/LICENSE",
     "standards",
     "skills",
     "templates/project"

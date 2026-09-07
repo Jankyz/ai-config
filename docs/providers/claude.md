@@ -30,13 +30,15 @@ configuration, and telemetry remain external. The adapter neither parses nor mod
 
 ## Skills
 
-All eleven canonical `aic-*` skills are rendered directly from `skills/aic-*/SKILL.md` under the
+All canonical `aic-*` skills are rendered directly from `skills/aic-*/SKILL.md` under the
 personal skills root. The installed representation adds only
 `disable-model-invocation: true` to frontmatter, retaining the canonical name, description, and
 body. Claude invocation remains `/aic-*`. Codex-only `agents/openai.yaml` is never installed.
 
 `aic-bootstrap-project` receives its `assets/project/` files from `templates/project/`; the
 installer copies those bytes unchanged.
+
+The Phase 8 UI extensions `aic-ui-components`, `aic-ui-generate`, and `aic-ui-review` use the same translation and remain explicitly invoked as `/aic-ui-*`. The first two require an already available 21st CLI for their external capability; installation and authentication remain outside ai-config. Visual review requires current and approved reference screenshots and is read-only.
 
 ## Project bridge
 

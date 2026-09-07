@@ -2,6 +2,30 @@
   "schemaVersion": 1,
   "sources": [
     {
+      "sourceId": "21st-skill",
+      "kind": "github",
+      "commit": "0d77001a77fe8540bb07ed68d09092ee08546ed3",
+      "resources": [
+        {
+          "resourceId": "21st-ai",
+          "path": "skills/21st-ai",
+          "digest": "e0723d6d7e89f8102b7b1c83b7f2a0ef258064c56de8ede3035151d662c1b5c2"
+        },
+        {
+          "resourceId": "21st-cli-use",
+          "path": "skills/21st-cli-use",
+          "digest": "ff6cfafea60d8fdbea8df71c1ef0f114f2c60077dac1892696bb0822407deaf1"
+        }
+      ],
+      "license": {
+        "spdx": "Apache-2.0",
+        "path": "LICENSE",
+        "scope": "repository",
+        "digest": "ac17c29e5529b0d977b8521353838c06c46f814d83de12da221418d62102de6f"
+      },
+      "resolvedAt": "2026-09-07T09:07:47.835Z"
+    },
+    {
       "sourceId": "matt-skills",
       "kind": "github",
       "commit": "3cca18b368ae95cdbdebbff572ccafa662551015",

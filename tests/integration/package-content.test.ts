@@ -34,9 +34,12 @@ describe("package contents", () => {
         "templates/project/docs/README.md",
         "upstream/registry.json",
         "upstream/lock.json",
+        "THIRD_PARTY_NOTICES.md",
+        "third_party/21st/LICENSE",
       ]),
     );
     expect(paths.some((path) => path.startsWith("tests/"))).toBe(false);
     expect(paths.some((path) => path.startsWith("docs/plans/"))).toBe(false);
+    expect(paths).not.toContain("third_party/21st/NOTICE");
   });
 });

@@ -2,6 +2,31 @@
   "schemaVersion": 1,
   "sources": [
     {
+      "id": "21st-skill",
+      "kind": "github",
+      "repository": "21st-dev/skill",
+      "track": { "type": "branch", "value": "main" },
+      "license": {
+        "expected": "Apache-2.0",
+        "scope": "repository",
+        "evidence": "LICENSE"
+      },
+      "resources": [
+        {
+          "id": "21st-cli-use",
+          "path": "skills/21st-cli-use",
+          "mode": "adapted",
+          "localPath": "skills/aic-ui-components"
+        },
+        {
+          "id": "21st-ai",
+          "path": "skills/21st-ai",
+          "mode": "adapted",
+          "localPath": "skills/aic-ui-generate"
+        }
+      ]
+    },
+    {
       "id": "matt-skills",
       "kind": "github",
       "repository": "mattpocock/skills",

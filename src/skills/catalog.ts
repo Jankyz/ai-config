@@ -19,6 +19,9 @@ export const nativeSkillNames = [
   "aic-security-review",
   "aic-lore-commit",
   "aic-bootstrap-project",
+  "aic-ui-components",
+  "aic-ui-generate",
+  "aic-ui-review",
 ] as const;
 export type NativeSkillName = (typeof nativeSkillNames)[number];
 export interface NativeSkillBundledAsset {
@@ -74,7 +77,7 @@ export async function validateNativeSkillCatalog(): Promise<NativeSkillCatalogVa
   const expected = [...nativeSkillNames].sort();
   if (directories.join("\n") !== expected.join("\n"))
     errors.push(
-      "Native skill directories must contain exactly the approved eleven skills.",
+      "Skill directories must contain exactly the approved canonical skills.",
     );
   const seen = new Set<string>();
   const skills: NativeSkillAsset[] = [];

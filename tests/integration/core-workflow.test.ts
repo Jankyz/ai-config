@@ -71,7 +71,7 @@ afterEach(async () => {
 });
 
 describe("Codex core workflow", () => {
-  it("installs global instructions and all eleven skills in an isolated home, then converges", async () => {
+  it("installs global instructions and all canonical skills in an isolated home, then converges", async () => {
     const test = await fixture();
     await mkdir(test.codexHome, { recursive: true });
     const config = join(test.codexHome, "config.toml");
@@ -79,7 +79,7 @@ describe("Codex core workflow", () => {
     const initial = await applyCore(test);
     const globalContract = await readGlobalAgentContract();
     expect(initial.canApply).toBe(true);
-    expect(initial.nativeSkills.installerPlan?.actions).toHaveLength(27);
+    expect(initial.nativeSkills.installerPlan?.actions).toHaveLength(33);
     expect(await readFile(test.detection.paths.globalAgents, "utf8")).toBe(
       globalContract,
     );

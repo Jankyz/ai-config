@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI Config UI Review"
+  short_description: "Compare visual evidence and return a structured read-only verdict."
+  default_prompt: "Use $aic-ui-review to compare current screenshots with approved references."
+policy:
+  allow_implicit_invocation: false

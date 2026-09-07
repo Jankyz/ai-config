@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI Config UI Components"
+  short_description: "Discover 21st UI components or add one within approved work."
+  default_prompt: "Use $aic-ui-components to find or evaluate a UI component."
+policy:
+  allow_implicit_invocation: false

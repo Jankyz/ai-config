@@ -63,7 +63,7 @@ afterEach(async () => {
 });
 
 describe("Claude core workflow", () => {
-  it("installs the global contract and all eleven Claude-native skills in an isolated home", async () => {
+  it("installs the global contract and all canonical Claude skills in an isolated home", async () => {
     const test = await fixture();
     await mkdir(test.detection.paths.home, { recursive: true });
     await writeFile(test.detection.paths.settingsJson, '{"external":true}\n');
@@ -71,9 +71,9 @@ describe("Claude core workflow", () => {
     const globalContract = await readGlobalAgentContract();
 
     expect(initial.canApply).toBe(true);
-    expect(initial.nativeSkills.catalog.skills).toHaveLength(11);
+    expect(initial.nativeSkills.catalog.skills).toHaveLength(14);
     expect(initial.nativeSkills.installerPlan?.actions).toHaveLength(
-      11 + projectTemplatePaths.length,
+      14 + projectTemplatePaths.length,
     );
     expect(await readFile(test.detection.paths.globalClaude, "utf8")).toBe(
       globalContract,

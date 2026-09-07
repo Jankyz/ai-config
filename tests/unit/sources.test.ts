@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import {
   acquireGitHubResource,
@@ -95,6 +96,77 @@ function matchingState(): { registry: SourceRegistry; lock: SourceLock } {
 }
 
 describe("external source validation", () => {
+  it("pins only the approved adapted 21st resources for Phase 8", async () => {
+    const [registryBytes, lockBytes, notices, license] = await Promise.all([
+      readFile("upstream/registry.json", "utf8"),
+      readFile("upstream/lock.json", "utf8"),
+      readFile("THIRD_PARTY_NOTICES.md", "utf8"),
+      readFile("third_party/21st/LICENSE"),
+    ]);
+    const registry = JSON.parse(registryBytes) as SourceRegistry;
+    const lock = JSON.parse(lockBytes) as SourceLock;
+    expect(() => validateSourceState(registry, lock)).not.toThrow();
+    const source = registry.sources.find((item) => item.id === "21st-skill");
+    const locked = lock.sources.find((item) => item.sourceId === "21st-skill");
+    expect(source).toMatchObject({
+      repository: "21st-dev/skill",
+      license: { expected: "Apache-2.0", evidence: "LICENSE" },
+      resources: [
+        {
+          id: "21st-cli-use",
+          path: "skills/21st-cli-use",
+          mode: "adapted",
+          localPath: "skills/aic-ui-components",
+        },
+        {
+          id: "21st-ai",
+          path: "skills/21st-ai",
+          mode: "adapted",
+          localPath: "skills/aic-ui-generate",
+        },
+      ],
+    });
+    expect(locked).toMatchObject({
+      commit: "0d77001a77fe8540bb07ed68d09092ee08546ed3",
+      license: {
+        spdx: "Apache-2.0",
+        digest:
+          "ac17c29e5529b0d977b8521353838c06c46f814d83de12da221418d62102de6f",
+      },
+      resources: [
+        {
+          resourceId: "21st-ai",
+          digest:
+            "e0723d6d7e89f8102b7b1c83b7f2a0ef258064c56de8ede3035151d662c1b5c2",
+        },
+        {
+          resourceId: "21st-cli-use",
+          digest:
+            "ff6cfafea60d8fdbea8df71c1ef0f114f2c60077dac1892696bb0822407deaf1",
+        },
+      ],
+    });
+    expect(notices).toContain("21st-dev/skill");
+    expect(notices).toContain("third_party/21st/LICENSE");
+    expect(notices).not.toMatch(/Oh My Codex|Yeachan-Heo/);
+    expect(sha256(license)).toBe(
+      "ac17c29e5529b0d977b8521353838c06c46f814d83de12da221418d62102de6f",
+    );
+    expect(notices).toContain("No upstream `NOTICE` file exists");
+    for (const path of [
+      "skills/aic-ui-components/SKILL.md",
+      "skills/aic-ui-generate/SKILL.md",
+    ])
+      await expect(readFile(path, "utf8")).resolves.toContain(
+        "Distributed under Apache-2.0; see `third_party/21st/LICENSE`.",
+      );
+    expect(registry.sources.find((item) => item.id === "oh-my-codex")).toEqual(
+      expect.objectContaining({
+        resources: [{ id: "oh-my-codex-reference", mode: "reference" }],
+      }),
+    );
+  });
+
   it("rejects actual NUL, traversal, and absolute resource paths", () => {
     expect(validateResourcePath("safe/path")).toBe(true);
     expect(validateResourcePath("safe\0path")).toBe(false);
