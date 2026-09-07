@@ -16,6 +16,7 @@ export interface CodexNativeSkillsPlan {
 export async function planCodexNativeSkills(input: {
   readonly detection: CodexDetection;
   readonly stateDir: string;
+  readonly replaceConflictArtifactIds?: readonly string[] | undefined;
 }): Promise<CodexNativeSkillsPlan> {
   const catalog = await validateNativeSkillCatalog();
   const diagnostics = [...catalog.errors];
@@ -54,6 +55,7 @@ export async function planCodexNativeSkills(input: {
         mode: 0o644,
       })),
     ]),
+    { replaceConflictArtifactIds: input.replaceConflictArtifactIds },
   );
   return {
     catalog,

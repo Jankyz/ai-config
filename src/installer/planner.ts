@@ -9,6 +9,7 @@ import type {
   InstallPlan,
   InstallerContext,
   InstalledArtifactState,
+  PlanInstallOptions,
 } from "../core/installer.js";
 import { InstallerError } from "../core/installer.js";
 import { readState, validMode, validateStateLayout } from "../state/index.js";
@@ -78,8 +79,7 @@ async function inspect(
       "INVALID_TARGET",
       "Special permission bits are unsupported.",
     );
-  if (!recorded || recorded.ownership !== "managed")
-    classification = "UNMANAGED_EXISTING";
+  if (!recorded) classification = "UNMANAGED_EXISTING";
   else
     classification =
       current.hash === recorded.contentHash &&
@@ -92,14 +92,21 @@ async function inspect(
 export async function planInstall(
   context: InstallerContext,
   desired: readonly DesiredArtifact[],
+  options: PlanInstallOptions = {},
 ): Promise<InstallPlan> {
   const transactionId = randomUUID();
   const conflicts: InstallConflict[] = [];
   const actions: InstallAction[] = [];
+  const replaceConflictArtifactIds = [
+    ...new Set(options.replaceConflictArtifactIds ?? []),
+  ].sort();
   const result = (): InstallPlan => ({
     transactionId,
     actions,
     conflicts,
+    ...(replaceConflictArtifactIds.length === 0
+      ? {}
+      : { replaceConflictArtifactIds }),
     hasChanges: actions.some((action) => action.kind !== "NOOP"),
     canApply: conflicts.length === 0,
   });
@@ -149,6 +156,15 @@ export async function planInstall(
       conflicts.push({
         kind: "INVALID_TARGET",
         detail: "Invalid desired bytes or permission mode.",
+      });
+  }
+  for (const id of replaceConflictArtifactIds) {
+    if (!id || !ids.has(id))
+      conflicts.push({
+        kind: "STATE_INVALID",
+        ...(id ? { artifactId: id } : {}),
+        detail:
+          "Conflict replacement authorization must name one desired artifact ID.",
       });
   }
   if (conflicts.length) {
@@ -212,13 +228,6 @@ export async function planInstall(
       );
       continue;
     }
-    if (known?.ownership === "adopted") {
-      addConflict(
-        "UNSUPPORTED_ADOPTED_WRITE",
-        "Generic adopted writes are unsupported.",
-      );
-      continue;
-    }
     const observed = await inspect(targetPath, known);
     const desiredHash = hashContent(artifact.content);
     const managedMode = artifact.mode ?? known?.mode;
@@ -249,9 +258,24 @@ export async function planInstall(
         addConflict("SYMLINK_TARGET", "Target is a symbolic link.");
         continue;
       default:
+        if (
+          observed.hash === desiredHash &&
+          observed.mode === intendedMode &&
+          known === null
+        ) {
+          kind = "ADOPT";
+          break;
+        }
+        if (
+          observed.classification === "UNMANAGED_EXISTING" &&
+          replaceConflictArtifactIds.includes(id)
+        ) {
+          kind = "REPLACE_UNMANAGED_APPROVED";
+          break;
+        }
         addConflict(
           "UNMANAGED_EXISTS",
-          "Existing content has no managed ownership evidence.",
+          "Existing content has no managed ownership evidence matching the desired artifact.",
         );
         continue;
     }
@@ -277,10 +301,12 @@ export async function planInstall(
 export async function revalidate(
   context: InstallerContext,
   actions: readonly InstallAction[],
+  replaceConflictArtifactIds: readonly string[] = [],
 ): Promise<void> {
   const fresh = await planInstall(
     context,
     actions.map((action) => action.artifact),
+    { replaceConflictArtifactIds },
   );
   if (!fresh.canApply || !isDeepStrictEqual(fresh.actions, actions))
     throw new InstallerError(

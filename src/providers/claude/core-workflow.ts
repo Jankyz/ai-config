@@ -19,18 +19,25 @@ export interface ClaudeCoreWorkflowPlan {
 export async function planClaudeCoreWorkflow(input: {
   readonly detection: ClaudeDetection;
   readonly stateDir: string;
+  readonly replaceConflictArtifactIds?: readonly string[] | undefined;
 }): Promise<ClaudeCoreWorkflowPlan> {
   const [content, nativeSkills] = await Promise.all([
     readGlobalAgentContract(),
     planClaudeNativeSkills({
       detection: input.detection,
       stateDir: input.stateDir,
+      replaceConflictArtifactIds: input.replaceConflictArtifactIds?.filter(
+        (id) => id.startsWith("claude.user-skill."),
+      ),
     }),
   ]);
   const globalInstructions = await planClaudeGlobalInstructions({
     detection: input.detection,
     stateDir: input.stateDir,
     content,
+    replaceConflictArtifactIds: input.replaceConflictArtifactIds?.filter(
+      (id) => id === "claude.global.instructions",
+    ),
   });
   return {
     globalInstructions,

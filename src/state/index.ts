@@ -227,6 +227,8 @@ export function parseReceipt(source: string, id: string): TransactionReceipt {
       typeof action.action !== "string" ||
       ![
         "CREATE",
+        "ADOPT",
+        "REPLACE_UNMANAGED_APPROVED",
         "REPLACE_MANAGED",
         "RECREATE_MISSING_MANAGED",
         "NOOP",

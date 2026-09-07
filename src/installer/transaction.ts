@@ -1,5 +1,6 @@
 import { open, rmdir, unlink } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { isDeepStrictEqual } from "node:util";
 import type {
   ArtifactReceipt,
   InstallAction,
@@ -10,6 +11,9 @@ import type {
 import { InstallerError } from "../core/installer.js";
 import {
   assertRecoveryClear,
+  emptyState,
+  parseReceipt,
+  parseState,
   readStateSnapshot,
   statePath,
   validateStateLayout,
@@ -142,6 +146,21 @@ export async function applyInstallPlan(
   validateTransactionId(planInput.transactionId);
   const context = structuredClone(contextInput);
   const plan = structuredClone(planInput);
+  const replaceConflictArtifactIds = [
+    ...new Set(plan.replaceConflictArtifactIds ?? []),
+  ].sort();
+  if (
+    replaceConflictArtifactIds.some((id) => !id) ||
+    plan.actions.some(
+      (action) =>
+        action.kind === "REPLACE_UNMANAGED_APPROVED" &&
+        !replaceConflictArtifactIds.includes(action.artifact.id),
+    )
+  )
+    throw new InstallerError(
+      "STATE_INVALID",
+      "Unmanaged replacement requires matching artifact authorization.",
+    );
   if (!plan.canApply || plan.conflicts.length)
     throw new InstallerError(
       "STATE_INVALID",
@@ -160,6 +179,8 @@ export async function applyInstallPlan(
   let previous: Awaited<ReturnType<typeof readStateSnapshot>> | undefined;
   let publishedState: FileEvidence | undefined;
   const mutations: Mutation[] = [];
+  const adoptedTargets: { action: InstallAction; evidence: FileEvidence }[] =
+    [];
   const createdDirectories: string[] = [];
   try {
     await assertRecoveryClear(root);
@@ -177,7 +198,7 @@ export async function applyInstallPlan(
     previous = await readStateSnapshot(root);
     if (previous.snapshot && !validMode(previous.snapshot.mode))
       throw new InstallerError("STATE_INVALID", "Unsupported state file mode.");
-    await revalidate(context, plan.actions);
+    await revalidate(context, plan.actions, replaceConflictArtifactIds);
     const stateFile = await statePath(root, "state.json");
     await requireEvidence(stateFile, previous.snapshot);
     const details: ArtifactReceipt[] = plan.actions.map((action) => ({
@@ -222,9 +243,37 @@ export async function applyInstallPlan(
       if (action.kind === "NOOP") continue;
       await options.beforeWrite?.(structuredClone(action), index);
       await requireEvidence(stateFile, previous.snapshot);
-      await revalidate(context, [action]);
+      await revalidate(
+        context,
+        [action],
+        action.kind === "REPLACE_UNMANAGED_APPROVED"
+          ? [action.artifact.id]
+          : [],
+      );
       const target = action.artifact.targetPath;
       const before = await readRegular(target);
+      if (action.kind === "ADOPT") {
+        await requireEvidence(target, before);
+        adoptedTargets.push({ action, evidence: before! });
+        await options.afterWrite?.(structuredClone(action), index);
+        await requireEvidence(target, before);
+        Object.defineProperty(nextState.artifacts, action.artifact.id, {
+          enumerable: true,
+          configurable: true,
+          writable: true,
+          value: {
+            id: action.artifact.id,
+            targetPath: target,
+            ownership: "adopted",
+            contentHash: action.desiredHash,
+            ...(action.managedMode === undefined
+              ? {}
+              : { mode: action.managedMode }),
+            lastTransactionId: plan.transactionId,
+          },
+        });
+        continue;
+      }
       let backupPath: string | undefined;
       if (before) {
         backupPath = await privateBackup(
@@ -253,7 +302,13 @@ export async function applyInstallPlan(
         action.expectedAbsent,
         async () => {
           await requireEvidence(stateFile, previous!.snapshot);
-          await revalidate(context, [action]);
+          await revalidate(
+            context,
+            [action],
+            action.kind === "REPLACE_UNMANAGED_APPROVED"
+              ? [action.artifact.id]
+              : [],
+          );
           await requireEvidence(target, before);
         },
       );
@@ -292,6 +347,13 @@ export async function applyInstallPlan(
         await requireEvidence(
           mutation.action.artifact.targetPath,
           mutation.after,
+        );
+      }
+      for (const adoption of adoptedTargets) {
+        await validateTarget(context, adoption.action.artifact.targetPath);
+        await requireEvidence(
+          adoption.action.artifact.targetPath,
+          adoption.evidence,
         );
       }
     };
@@ -407,6 +469,193 @@ export async function applyInstallPlan(
         "RECOVERY_REQUIRED",
         "Rollback or recovery evidence could not be verified; lock and backups retained.",
       );
+    }
+    throw error;
+  } finally {
+    if (!keepLock) await releaseLock(root, lock);
+  }
+}
+
+/** Reads a committed receipt for the explicit public rollback surface. */
+export async function readRollbackReceipt(
+  stateDir: string,
+  transactionId: string,
+): Promise<TransactionReceipt> {
+  validateTransactionId(transactionId);
+  const root = await validateStateLayout(stateDir);
+  const path = await statePath(root, "receipts", `${transactionId}.json`);
+  const snapshot = await readRegular(path);
+  if (!snapshot)
+    throw new InstallerError(
+      "STATE_INVALID",
+      "Transaction receipt does not exist.",
+    );
+  const receipt = parseReceipt(snapshot.bytes.toString("utf8"), transactionId);
+  if (receipt.status !== "committed")
+    throw new InstallerError(
+      "RECOVERY_REQUIRED",
+      "Only a committed transaction can be rolled back.",
+    );
+  return receipt;
+}
+
+/**
+ * Reverses one explicit, still-current transaction. It intentionally refuses a
+ * transaction that is no longer the complete state head, avoiding destruction
+ * of later ownership changes.
+ */
+export async function rollbackInstallTransaction(
+  contextInput: InstallerContext,
+  transactionId: string,
+): Promise<TransactionReceipt> {
+  validateTransactionId(transactionId);
+  const context = structuredClone(contextInput);
+  const root = await validateStateLayout(context.stateDir);
+  await assertRecoveryClear(root);
+  const receipt = await readRollbackReceipt(root, transactionId);
+  const stateBefore = await readStateSnapshot(root);
+  const involved = new Set(
+    receipt.actions
+      .filter((action) => action.action !== "NOOP")
+      .map((action) => action.artifactId),
+  );
+  let previousState = emptyState();
+  if (receipt.previousState) {
+    const previousBackup = await readRegular(
+      await statePath(root, "backups", transactionId, "state-before.bin"),
+    );
+    if (
+      !previousBackup ||
+      previousBackup.mode !== 0o600 ||
+      previousBackup.hash !== receipt.previousState.contentHash
+    )
+      throw new InstallerError(
+        "RECOVERY_REQUIRED",
+        "Previous state backup is invalid.",
+      );
+    previousState = parseState(previousBackup.bytes.toString("utf8"));
+  }
+  const unaffectedStateChanged = Object.entries(previousState.artifacts).some(
+    ([id, entry]) =>
+      !involved.has(id) &&
+      !isDeepStrictEqual(stateBefore.state.artifacts[id], entry),
+  );
+  const unexpectedState = Object.keys(stateBefore.state.artifacts).some(
+    (id) => !involved.has(id) && !previousState.artifacts[id],
+  );
+  if (
+    unaffectedStateChanged ||
+    unexpectedState ||
+    [...involved].some(
+      (id) =>
+        stateBefore.state.artifacts[id]?.lastTransactionId !== transactionId,
+    )
+  )
+    throw new InstallerError(
+      "STATE_INCONSISTENCY",
+      "Rollback is blocked because a later or incomplete ownership state exists.",
+    );
+  const lock = await lockTransaction(root, transactionId);
+  let keepLock = false;
+  let mutableReceipt = receipt;
+  try {
+    for (const action of [...receipt.actions].reverse()) {
+      await validateTarget(context, action.targetPath);
+      if (action.action === "NOOP") continue;
+      const current = await readRegular(action.targetPath);
+      if (
+        !current ||
+        current.hash !== action.afterHash ||
+        current.mode !== action.afterMode
+      )
+        throw new InstallerError(
+          "RECOVERY_REQUIRED",
+          "Rollback target changed since its transaction.",
+        );
+      if (action.action === "ADOPT") continue;
+      if (
+        action.action === "CREATE" ||
+        action.action === "RECREATE_MISSING_MANAGED"
+      ) {
+        await unlink(action.targetPath);
+        if (await statOrMissing(action.targetPath))
+          throw new InstallerError(
+            "RECOVERY_REQUIRED",
+            "Created rollback target could not be removed.",
+          );
+        continue;
+      }
+      if (!action.backupFile || action.beforeMode === undefined)
+        throw new InstallerError(
+          "RECOVERY_REQUIRED",
+          "Replacement rollback evidence is incomplete.",
+        );
+      const backup = await readRegular(
+        await statePath(root, "backups", transactionId, action.backupFile),
+      );
+      if (!backup || backup.mode !== 0o600 || backup.hash !== action.beforeHash)
+        throw new InstallerError(
+          "RECOVERY_REQUIRED",
+          "Replacement rollback backup is invalid.",
+        );
+      const restored = await atomicWrite(
+        action.targetPath,
+        backup.bytes,
+        action.beforeMode,
+        false,
+        () => requireEvidence(action.targetPath, current),
+      );
+      await requireEvidence(action.targetPath, restored);
+    }
+    await requireEvidence(
+      await statePath(root, "state.json"),
+      stateBefore.snapshot,
+    );
+    if (receipt.previousState) {
+      const backup = await readRegular(
+        await statePath(root, "backups", transactionId, "state-before.bin"),
+      );
+      if (
+        !backup ||
+        backup.mode !== 0o600 ||
+        backup.hash !== receipt.previousState.contentHash
+      )
+        throw new InstallerError(
+          "RECOVERY_REQUIRED",
+          "Previous state backup is invalid.",
+        );
+      const restored = await atomicWrite(
+        await statePath(root, "state.json"),
+        backup.bytes,
+        receipt.previousState.mode,
+        false,
+        async () =>
+          requireEvidence(
+            await statePath(root, "state.json"),
+            stateBefore.snapshot,
+          ),
+      );
+      await requireEvidence(await statePath(root, "state.json"), restored);
+    } else {
+      await unlink(await statePath(root, "state.json"));
+    }
+    mutableReceipt = {
+      ...receipt,
+      status: "rolled_back",
+      completedAt: new Date().toISOString(),
+    };
+    await writeReceipt(root, mutableReceipt);
+    return mutableReceipt;
+  } catch (error) {
+    keepLock = true;
+    try {
+      await writeReceipt(root, {
+        ...mutableReceipt,
+        status: "failed",
+        completedAt: new Date().toISOString(),
+      });
+    } catch {
+      // Retaining the lock is the fail-closed recovery signal.
     }
     throw error;
   } finally {

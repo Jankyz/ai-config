@@ -14,18 +14,25 @@ export interface CodexCoreWorkflowPlan {
 export async function planCodexCoreWorkflow(input: {
   readonly detection: CodexDetection;
   readonly stateDir: string;
+  readonly replaceConflictArtifactIds?: readonly string[] | undefined;
 }): Promise<CodexCoreWorkflowPlan> {
   const [content, nativeSkills] = await Promise.all([
     readGlobalAgentContract(),
     planCodexNativeSkills({
       detection: input.detection,
       stateDir: input.stateDir,
+      replaceConflictArtifactIds: input.replaceConflictArtifactIds?.filter(
+        (id) => id.startsWith("codex.user-skill."),
+      ),
     }),
   ]);
   const globalInstructions = await planCodexGlobalInstructions({
     detection: input.detection,
     stateDir: input.stateDir,
     content,
+    replaceConflictArtifactIds: input.replaceConflictArtifactIds?.filter(
+      (id) => id === "codex.global.instructions",
+    ),
   });
   return {
     globalInstructions,

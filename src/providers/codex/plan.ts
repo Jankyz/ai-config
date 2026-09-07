@@ -27,6 +27,7 @@ export interface PlanCodexGlobalInstructionsInput {
   readonly detection: CodexDetection;
   readonly stateDir: string;
   readonly content: string | Uint8Array;
+  readonly replaceConflictArtifactIds?: readonly string[] | undefined;
 }
 
 function hasInstructions(content: string | Uint8Array): boolean {
@@ -84,15 +85,19 @@ export async function planCodexGlobalInstructions(
     stateDir: input.stateDir,
     allowedTargetRoots: [input.detection.paths.home],
   };
-  const installerPlan = await planInstall(context, [
-    {
-      id: "codex.global.instructions",
-      targetPath: input.detection.paths.globalAgents,
-      content: input.content,
-      ownership: "managed",
-      mode: 0o644,
-    },
-  ]);
+  const installerPlan = await planInstall(
+    context,
+    [
+      {
+        id: "codex.global.instructions",
+        targetPath: input.detection.paths.globalAgents,
+        content: input.content,
+        ownership: "managed",
+        mode: 0o644,
+      },
+    ],
+    { replaceConflictArtifactIds: input.replaceConflictArtifactIds },
+  );
   return {
     detection: input.detection,
     diagnostics,

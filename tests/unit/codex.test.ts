@@ -222,7 +222,7 @@ describe("Codex global instructions", () => {
     expect(plan.installerPlan?.actions[0]?.kind).toBe("CREATE");
   });
 
-  it("passes Phase 2 ownership conflicts through unchanged", async () => {
+  it("classifies exact canonical content as adoptable and still blocks symlinks", async () => {
     const test = await fixture();
     await mkdir(test.codexHome, { recursive: true });
     await writeFile(test.detected.paths.globalAgents, content);
@@ -231,9 +231,7 @@ describe("Codex global instructions", () => {
       stateDir: test.stateDir,
       content,
     });
-    expect(unmanaged.installerPlan?.conflicts[0]?.kind).toBe(
-      "UNMANAGED_EXISTS",
-    );
+    expect(unmanaged.installerPlan?.actions[0]?.kind).toBe("ADOPT");
     await rm(test.detected.paths.globalAgents);
     await symlink(
       join(test.homeDir, "outside"),

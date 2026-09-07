@@ -8,7 +8,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { mkdtemp } from "node:fs/promises";
 
 import { afterEach, describe, expect, it } from "vitest";
@@ -16,8 +16,13 @@ import { afterEach, describe, expect, it } from "vitest";
 import type {
   DesiredArtifact,
   InstallerContext,
+  ProviderOperationPlan,
 } from "../../src/core/index.js";
-import { InstallerError } from "../../src/core/index.js";
+import {
+  assertOperationApprovalFingerprint,
+  InstallerError,
+  operationApprovalFingerprint,
+} from "../../src/core/index.js";
 import { applyInstallPlan, planInstall } from "../../src/installer/index.js";
 
 const homes: string[] = [];
@@ -202,29 +207,103 @@ describe("installer core filesystem safety", () => {
     ).toBe("STATE_INVALID");
   });
 
-  it("represents adopted ownership but defers generic adopted writes", async () => {
+  it("supports later explicit replacement of an adopted artifact", async () => {
     const test = await fixture();
-    await mkdir(test.context.stateDir, { recursive: true });
     const target = join(test.root, "adopted");
-    await writeFile(
-      join(test.context.stateDir, "state.json"),
-      JSON.stringify({
-        schemaVersion: 1,
-        artifacts: {
-          "fixture.adopted": {
-            id: "fixture.adopted",
-            targetPath: target,
-            ownership: "adopted",
-            contentHash: "a".repeat(64),
-            lastTransactionId: "previous",
-          },
-        },
-      }),
+    await mkdir(dirname(target), { recursive: true });
+    await writeFile(target, "old");
+    await applyInstallPlan(
+      test.context,
+      await planInstall(test.context, [
+        artifact("fixture.adopted", target, "old"),
+      ]),
     );
     const plan = await planInstall(test.context, [
       artifact("fixture.adopted", target, "new"),
     ]);
-    expect(plan.conflicts[0]?.kind).toBe("UNSUPPORTED_ADOPTED_WRITE");
+    expect(plan.actions[0]?.kind).toBe("REPLACE_MANAGED");
+  });
+
+  it("fails closed when an adoption target changes before state publication", async () => {
+    const test = await fixture();
+    const target = join(test.root, "adoption-race");
+    await mkdir(dirname(target), { recursive: true });
+    await writeFile(target, "desired");
+    const plan = await planInstall(test.context, [
+      artifact("fixture.adoption-race", target, "desired"),
+    ]);
+    expect(plan.actions[0]?.kind).toBe("ADOPT");
+
+    await expect(
+      applyInstallPlan(test.context, plan, {
+        afterWrite: async () => writeFile(target, "raced"),
+      }),
+    ).rejects.toMatchObject({ kind: "RECOVERY_REQUIRED" });
+    await expect(readFile(target, "utf8")).resolves.toBe("raced");
+    await expect(
+      lstat(join(test.context.stateDir, "state.json")),
+    ).rejects.toMatchObject({ code: "ENOENT" });
+  });
+
+  it("binds unmanaged replacement authorization to exact observed bytes and artifact ID", async () => {
+    const test = await fixture();
+    const target = join(test.root, "legacy");
+    await mkdir(dirname(target), { recursive: true });
+    await writeFile(target, "legacy");
+    const plan = await planInstall(
+      test.context,
+      [artifact("fixture.legacy", target, "desired")],
+      { replaceConflictArtifactIds: ["fixture.legacy"] },
+    );
+    expect(plan.actions[0]?.kind).toBe("REPLACE_UNMANAGED_APPROVED");
+
+    await writeFile(target, "raced");
+    await expect(applyInstallPlan(test.context, plan)).rejects.toMatchObject({
+      kind: "STALE_PLAN",
+    });
+    await expect(readFile(target, "utf8")).resolves.toBe("raced");
+    await expect(
+      lstat(join(test.context.stateDir, "state.json")),
+    ).rejects.toMatchObject({ code: "ENOENT" });
+  });
+
+  it("changes the approval fingerprint when desired content changes", async () => {
+    const test = await fixture();
+    const target = join(test.root, "legacy-desired-change");
+    await mkdir(dirname(target), { recursive: true });
+    await writeFile(target, "legacy");
+    const options = { replaceConflictArtifactIds: ["fixture.legacy"] };
+    const firstPlan = await planInstall(
+      test.context,
+      [artifact("fixture.legacy", target, "desired X")],
+      options,
+    );
+    const secondPlan = await planInstall(
+      test.context,
+      [artifact("fixture.legacy", target, "desired Y")],
+      options,
+    );
+    const operation = (plan: typeof firstPlan): ProviderOperationPlan => ({
+      provider: "codex",
+      diagnostics: [],
+      plan,
+      roots: test.context.allowedTargetRoots,
+    });
+    const fingerprint = operationApprovalFingerprint(
+      operation(firstPlan),
+      "setup",
+    );
+
+    expect(
+      operationApprovalFingerprint(operation(secondPlan), "setup"),
+    ).not.toBe(fingerprint);
+    expect(() =>
+      assertOperationApprovalFingerprint(
+        operation(secondPlan),
+        "setup",
+        fingerprint,
+      ),
+    ).toThrow("PREVIEW_CHANGED");
   });
 
   it("rolls back replacements and created files after an injected later write failure", async () => {

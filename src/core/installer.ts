@@ -59,7 +59,16 @@ export interface InstallConflict {
 }
 
 export type InstallActionKind =
-  "CREATE" | "REPLACE_MANAGED" | "RECREATE_MISSING_MANAGED" | "NOOP";
+  | "CREATE"
+  | "ADOPT"
+  | "REPLACE_UNMANAGED_APPROVED"
+  | "REPLACE_MANAGED"
+  | "RECREATE_MISSING_MANAGED"
+  | "NOOP";
+
+export interface PlanInstallOptions {
+  readonly replaceConflictArtifactIds?: readonly string[] | undefined;
+}
 
 export interface InstallAction {
   readonly kind: InstallActionKind;
@@ -78,6 +87,7 @@ export interface InstallPlan {
   readonly transactionId: string;
   readonly actions: readonly InstallAction[];
   readonly conflicts: readonly InstallConflict[];
+  readonly replaceConflictArtifactIds?: readonly string[];
   readonly hasChanges: boolean;
   readonly canApply: boolean;
 }

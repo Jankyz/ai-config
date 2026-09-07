@@ -40,6 +40,7 @@ export function renderClaudeSkillMarkdown(source: string): string {
 export async function planClaudeNativeSkills(input: {
   readonly detection: ClaudeDetection;
   readonly stateDir: string;
+  readonly replaceConflictArtifactIds?: readonly string[] | undefined;
 }): Promise<ClaudeNativeSkillsPlan> {
   const catalog = await validateNativeSkillCatalog();
   const diagnostics = [...catalog.errors];
@@ -94,7 +95,9 @@ export async function planClaudeNativeSkills(input: {
     stateDir: input.stateDir,
     allowedTargetRoots: [input.detection.paths.home],
   };
-  const installerPlan = await planInstall(context, artifacts);
+  const installerPlan = await planInstall(context, artifacts, {
+    replaceConflictArtifactIds: input.replaceConflictArtifactIds,
+  });
   return {
     catalog,
     diagnostics,

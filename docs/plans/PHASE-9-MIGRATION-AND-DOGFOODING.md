@@ -11,6 +11,25 @@
 
 ---
 
+## Owner-decision amendment — legacy Codex global contract
+
+The real Codex `AGENTS.md` observed during the Phase 9 audit is a differing, unmanaged legacy OMX
+contract. It is not adoptable, and preserving OMX as the global contract is not the intended
+migration outcome. The expected real migration may replace this one canonical-target conflict only
+after the owner explicitly authorizes `codex.global.instructions` for conflict replacement.
+
+This amendment does not permit generic force overwrite, conflict suppression, or replacement of
+any other artifact. Real migration remains separately gated on explicit owner approval after this
+correction and review.
+
+Artifact selection and preview approval are separate. `--replace-conflict <artifact-id>` selects
+the exceptional canonical conflict for preview. That preview prints a deterministic approval
+fingerprint over the provider, operation, replacement set, and complete material action evidence.
+A later mutation requires both `--approve-preview <fingerprint>` and `--apply`; a changed proposal
+is rejected with `PREVIEW_CHANGED` before transaction mutation. Fingerprints are never persisted.
+
+---
+
 ## 1. Goal
 
 Prove that `ai-config` can safely configure and maintain a real coding-agent environment before public release.
