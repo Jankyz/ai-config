@@ -14,7 +14,9 @@
 
 ## 1. Goal
 
-Publish the first public ai-config release from the environment that has already passed real Codex migration, dependency migration, legacy cleanup, doctor, setup convergence, update convergence, package verification, and isolated clean-home dogfooding.
+Publish the first public ai-config release from the environment that has already passed real Codex migration, dependency
+migration, legacy cleanup, doctor, setup convergence, update convergence, package verification, and isolated clean-home
+dogfooding.
 
 Phase 10 must produce a release that allows another Mac to begin with:
 
@@ -106,7 +108,8 @@ PACKAGE NAME OWNER DECISION REQUIRED
 
 with the smallest useful set of alternatives.
 
-The GitHub repository name and npm package name do not have to be identical, but public naming should be consistent where practical.
+The GitHub repository name and npm package name do not have to be identical, but public naming should be consistent
+where practical.
 
 ---
 
@@ -336,7 +339,8 @@ ui-ux-pro-max
 @21st-dev/cli
 ```
 
-Explain that external-managed runtime bytes are acquired from exact locked upstream identities during setup/update rather than bundled as uncontrolled mutable installers.
+Explain that external-managed runtime bytes are acquired from exact locked upstream identities during setup/update
+rather than bundled as uncontrolled mutable installers.
 
 Do not expose unnecessary internal implementation detail in the quick start.
 
@@ -354,7 +358,8 @@ project-owned Playwright or equivalent
 Python for UI UX Pro Max searchable data
 ```
 
-ai-config may diagnose their availability but does not automatically install or authenticate them unless explicitly documented otherwise.
+ai-config may diagnose their availability but does not automatically install or authenticate them unless explicitly
+documented otherwise.
 
 ---
 
@@ -464,7 +469,8 @@ Prefer npm Trusted Publishing / OIDC if available for the final package/reposito
 
 Do not commit npm access tokens.
 
-If trusted publishing cannot be configured for the initial package bootstrap, stop and return the exact safe bootstrap options to the owner.
+If trusted publishing cannot be configured for the initial package bootstrap, stop and return the exact safe bootstrap
+options to the owner.
 
 Do not silently switch to a long-lived token workflow.
 
@@ -1028,4 +1034,5 @@ until they have actually been tested.
 
 ## Phase invariant
 
-> **Publish only the exact artifact that was reviewed, make the first install safe and understandable, and treat post-release compatibility findings as patchable evidence rather than reasons to fabricate pre-release certainty.**
+> **Publish only the exact artifact that was reviewed, make the first install safe and understandable, and treat
+post-release compatibility findings as patchable evidence rather than reasons to fabricate pre-release certainty.**
