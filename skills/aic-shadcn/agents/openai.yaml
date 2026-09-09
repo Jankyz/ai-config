@@ -1,0 +1,8 @@
+interface:
+  display_name: "AI Config shadcn"
+  short_description: "Explicit project-scoped shadcn guidance"
+  default_prompt: "Use $aic-shadcn only for approved work in a project where shadcn is relevant."
+  icon_small: "./assets/shadcn-small.png"
+  icon_large: "./assets/shadcn.png"
+policy:
+  allow_implicit_invocation: false

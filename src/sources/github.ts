@@ -5,6 +5,7 @@ import {
   validateResourcePath,
 } from "./integrity.js";
 import { validateGitHubRepository } from "./registry.js";
+import { gunzipSync } from "node:zlib";
 
 export interface HttpResponse {
   readonly status: number;
@@ -41,7 +42,11 @@ export function createHttpsClient(
       const parsed = new URL(url);
       if (
         parsed.protocol !== "https:" ||
-        !["api.github.com", "registry.npmjs.org"].includes(parsed.hostname)
+        ![
+          "api.github.com",
+          "codeload.github.com",
+          "registry.npmjs.org",
+        ].includes(parsed.hostname)
       )
         throw new SourceError("Only approved HTTPS source hosts are allowed.");
       const controller = new AbortController();
@@ -263,4 +268,137 @@ export async function acquireGitHubResource(
     files: output,
     digest: treeDigest(output),
   };
+}
+
+function archiveString(bytes: Uint8Array): string {
+  return Buffer.from(bytes).toString("utf8").replace(/\0.*$/, "");
+}
+
+function archiveSize(header: Uint8Array): number {
+  const raw = archiveString(header.subarray(124, 136)).trim();
+  if (!/^[0-7]*$/.test(raw))
+    throw new SourceError("GitHub archive has an invalid size field.");
+  return raw ? Number.parseInt(raw, 8) : 0;
+}
+
+/** Acquires only requested immutable paths from a bounded codeload archive. */
+export async function acquireGitHubArchiveResources(
+  client: HttpClient,
+  repository: string,
+  commit: string,
+  resourcePaths: readonly string[],
+  limits: SourceLimits = defaultLimits,
+): Promise<ReadonlyMap<string, AcquiredResource>> {
+  validateGitHubRepository(repository);
+  if (
+    !/^[0-9a-f]{40}$/.test(commit) ||
+    resourcePaths.length === 0 ||
+    resourcePaths.some((path) => !validateResourcePath(path))
+  )
+    throw new SourceError(
+      "GitHub archive acquisition requires immutable safe resource paths.",
+    );
+  const response = await client.get(
+    `https://codeload.github.com/${repository}/tar.gz/${commit}`,
+    limits.maxTotalBytes,
+    { accept: "application/octet-stream" },
+  );
+  if (response.status < 200 || response.status >= 300)
+    throw new SourceError(
+      `GitHub archive request failed with status ${response.status}.`,
+    );
+  let archive: Uint8Array;
+  try {
+    archive =
+      response.body[0] === 0x1f && response.body[1] === 0x8b
+        ? gunzipSync(response.body, {
+            // codeload archives include repository metadata outside the selected
+            // resource; retain a bounded archive ceiling while materializing only
+            // the normal per-resource limit below.
+            maxOutputLength: 32 * 1024 * 1024,
+          })
+        : response.body;
+  } catch {
+    throw new SourceError("GitHub archive is not valid bounded gzip data.");
+  }
+  const prefix = `${repository.split("/")[1]}-${commit}/`;
+  const selected = new Map(
+    resourcePaths.map((path) => [path, [] as SourceFile[]]),
+  );
+  let offset = 0;
+  while (offset < archive.byteLength) {
+    const header = archive.subarray(offset, offset + 512);
+    if (header.byteLength !== 512)
+      throw new SourceError("GitHub archive has a truncated header.");
+    if (header.every((byte) => byte === 0)) break;
+    const name = archiveString(header.subarray(0, 100));
+    const headerPrefix = archiveString(header.subarray(345, 500));
+    const path = headerPrefix ? `${headerPrefix}/${name}` : name;
+    const type = String.fromCharCode(header[156] ?? 0);
+    const size = archiveSize(header);
+    const bodyStart = offset + 512;
+    const bodyEnd = bodyStart + size;
+    if (bodyEnd > archive.byteLength)
+      throw new SourceError("GitHub archive has a truncated file.");
+    offset = bodyStart + Math.ceil(size / 512) * 512;
+    if (!path.startsWith(prefix)) continue;
+    const repositoryPath = path.slice(prefix.length).replace(/\/$/, "");
+    for (const requested of resourcePaths) {
+      if (
+        repositoryPath !== requested &&
+        !repositoryPath.startsWith(`${requested}/`)
+      )
+        continue;
+      if (type === "5") break;
+      if (type !== "\0" && type !== "0")
+        throw new SourceError(
+          "GitHub archive contains a non-regular requested entry.",
+        );
+      const relative =
+        repositoryPath === requested
+          ? requested.split("/").at(-1)!
+          : repositoryPath.slice(requested.length + 1);
+      if (!validateResourcePath(relative))
+        throw new SourceError("GitHub archive has an unsafe requested path.");
+      const files = selected.get(requested)!;
+      if (files.some((file) => file.path === relative))
+        throw new SourceError("GitHub archive has duplicate requested paths.");
+      if (size > limits.maxFileBytes)
+        throw new SourceError("GitHub archive file exceeds size limit.");
+      files.push({
+        path: relative,
+        bytes: archive.slice(bodyStart, bodyEnd),
+        mode:
+          Number.parseInt(archiveString(header.subarray(100, 108)).trim(), 8) &
+          0o100
+            ? "100755"
+            : "100644",
+      });
+      break;
+    }
+  }
+  const result = new Map<string, AcquiredResource>();
+  for (const [path, files] of selected) {
+    const sorted = files.sort((left, right) =>
+      left.path.localeCompare(right.path),
+    );
+    if (!sorted.length || sorted.length > limits.maxFiles)
+      throw new SourceError(
+        `GitHub archive resource is missing or exceeds file limit: ${path}`,
+      );
+    if (
+      sorted.reduce((sum, file) => sum + file.bytes.byteLength, 0) >
+      limits.maxTotalBytes
+    )
+      throw new SourceError(
+        "GitHub archive resource exceeds total-size limit.",
+      );
+    result.set(path, {
+      commit,
+      path,
+      files: sorted,
+      digest: treeDigest(sorted),
+    });
+  }
+  return result;
 }

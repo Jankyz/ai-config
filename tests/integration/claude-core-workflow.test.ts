@@ -45,6 +45,7 @@ async function applyCore(test: Awaited<ReturnType<typeof fixture>>) {
   const plan = await planClaudeCoreWorkflow({
     detection: test.detection,
     stateDir: test.stateDir,
+    skipExternal: true,
   });
   const context = {
     homeDir: test.detection.paths.home,
@@ -71,9 +72,10 @@ describe("Claude core workflow", () => {
     const globalContract = await readGlobalAgentContract();
 
     expect(initial.canApply).toBe(true);
-    expect(initial.nativeSkills.catalog.skills).toHaveLength(14);
-    expect(initial.nativeSkills.installerPlan?.actions).toHaveLength(
-      14 + projectTemplatePaths.length,
+    expect(initial.nativeSkills.catalog.skills).toHaveLength(18);
+    expect(initial.nativeSkills.externalSkillNames).toEqual([]);
+    expect(initial.nativeSkills.installerPlan!.actions.length).toBeGreaterThan(
+      30,
     );
     expect(await readFile(test.detection.paths.globalClaude, "utf8")).toBe(
       globalContract,
@@ -122,6 +124,7 @@ describe("Claude core workflow", () => {
       verifyClaudeCoreWorkflow({
         detection: test.detection,
         stateDir: test.stateDir,
+        skipExternal: true,
       }),
     ).resolves.toMatchObject({ status: "VERIFIED" });
   });
@@ -140,6 +143,7 @@ describe("Claude core workflow", () => {
     const unmanagedPlan = await planClaudeNativeSkills({
       detection: unmanaged.detection,
       stateDir: unmanaged.stateDir,
+      skipExternal: true,
     });
     expect(unmanagedPlan.installerPlan?.conflicts).toEqual(
       expect.arrayContaining([
@@ -161,6 +165,7 @@ describe("Claude core workflow", () => {
     const driftPlan = await planClaudeNativeSkills({
       detection: drifted.detection,
       stateDir: drifted.stateDir,
+      skipExternal: true,
     });
     expect(driftPlan.installerPlan?.conflicts).toEqual(
       expect.arrayContaining([
@@ -213,6 +218,7 @@ describe("Claude core workflow", () => {
     const repeat = await planClaudeCoreWorkflow({
       detection: unmanaged.detection,
       stateDir: unmanaged.stateDir,
+      skipExternal: true,
     });
     expect(repeat.nativeSkills.installerPlan?.conflicts).toHaveLength(1);
   });

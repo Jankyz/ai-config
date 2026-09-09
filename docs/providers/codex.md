@@ -57,6 +57,8 @@ $HOME/.agents/skills/<skill-name>/agents/openai.yaml
 
 The adapter uses the supplied runtime home, never the process home. Canonical assets remain in `skills/`; the installer copies their exact contents. Each metadata file sets `policy.allow_implicit_invocation: false`, so each workflow is available only through explicit `$aic-*` invocation. This includes the Phase 8 UI extensions `aic-ui-components`, `aic-ui-generate`, and `aic-ui-review`. The `.agents` directory is the narrowly scoped allowed root; `config.toml` and all other Codex configuration remain external.
 
+Phase 9.1 adds explicit adapted skills and approved external-managed snapshots under the same skills root. The managed 21st runtime is installed only under ai-config state ownership, never in the Codex home or a global Node location.
+
 ## Current exclusions
 
 This phase does not manage plugins, project-level instruction files, Codex installation,

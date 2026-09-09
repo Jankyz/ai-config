@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI Config TDD"
+  short_description: "Explicit test-driven red-green-refactor"
+  default_prompt: "Use $aic-tdd to implement the approved scope through small red-green vertical slices."
+policy:
+  allow_implicit_invocation: false

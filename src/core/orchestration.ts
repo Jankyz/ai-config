@@ -15,7 +15,9 @@ import {
   type CodexCoreWorkflowPlan,
 } from "../providers/codex/index.js";
 import { validateSourceState } from "../sources/lock.js";
+import { createHttpsClient, type HttpClient } from "../sources/github.js";
 import { assertRecoveryClear, readState } from "../state/index.js";
+import { managedToolArtifacts, managedToolStateRoots } from "../tools/index.js";
 import type { ProviderId } from "./provider.js";
 
 export interface RuntimeRoots {
@@ -29,10 +31,14 @@ export interface ProviderOperationPlan {
   readonly diagnostics: readonly string[];
   readonly plan?: InstallPlan;
   readonly roots: readonly string[];
+  readonly stateTargetRoots: readonly string[];
 }
 
 export interface ProviderOperationOptions {
   readonly replaceConflictArtifactIds?: readonly string[] | undefined;
+  readonly dependencyClient?: HttpClient;
+  readonly skipExternal?: boolean;
+  readonly skipManagedTool?: boolean;
 }
 
 function canonicalSerialize(value: unknown): string {
@@ -169,6 +175,7 @@ export async function planProviderOperation(
   options: ProviderOperationOptions = {},
 ): Promise<ProviderOperationPlan> {
   const diagnostics: string[] = [];
+  const dependencyClient = options.dependencyClient ?? createHttpsClient();
   try {
     await assertRecoveryClear(roots.stateDir);
   } catch (error) {
@@ -197,13 +204,28 @@ export async function planProviderOperation(
       detection,
       stateDir: roots.stateDir,
       replaceConflictArtifactIds: options.replaceConflictArtifactIds,
+      dependencyClient,
+      ...(options.skipExternal ? { skipExternal: true } : {}),
     });
     diagnostics.push(...diagnosticsFor(workflow));
-    const artifacts = artifactsFor(workflow);
+    let toolArtifacts: readonly DesiredArtifact[] = [];
+    if (!options.skipManagedTool)
+      try {
+        toolArtifacts = await managedToolArtifacts(
+          roots.stateDir,
+          dependencyClient,
+        );
+      } catch (error) {
+        diagnostics.push(
+          `MANAGED_TOOL_INVALID: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    const artifacts = [...artifactsFor(workflow), ...toolArtifacts];
     const allowedTargetRoots = [
       detection.paths.home,
       dirname(detection.paths.userSkillsRoot),
     ];
+    const stateTargetRoots = managedToolStateRoots(roots.stateDir);
     const plan = diagnostics.length
       ? undefined
       : await planInstall(
@@ -211,6 +233,7 @@ export async function planProviderOperation(
             homeDir: roots.homeDir,
             stateDir: roots.stateDir,
             allowedTargetRoots,
+            allowedStateTargetRoots: stateTargetRoots,
           },
           artifacts,
           {
@@ -222,6 +245,7 @@ export async function planProviderOperation(
       diagnostics,
       ...(plan === undefined ? {} : { plan }),
       roots: allowedTargetRoots,
+      stateTargetRoots,
     };
   }
   const detection = await detectClaude({
@@ -232,10 +256,25 @@ export async function planProviderOperation(
     detection,
     stateDir: roots.stateDir,
     replaceConflictArtifactIds: options.replaceConflictArtifactIds,
+    dependencyClient,
+    ...(options.skipExternal ? { skipExternal: true } : {}),
   });
   diagnostics.push(...diagnosticsFor(workflow));
-  const artifacts = artifactsFor(workflow);
+  let toolArtifacts: readonly DesiredArtifact[] = [];
+  if (!options.skipManagedTool)
+    try {
+      toolArtifacts = await managedToolArtifacts(
+        roots.stateDir,
+        dependencyClient,
+      );
+    } catch (error) {
+      diagnostics.push(
+        `MANAGED_TOOL_INVALID: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  const artifacts = [...artifactsFor(workflow), ...toolArtifacts];
   const allowedTargetRoots = [detection.paths.home];
+  const stateTargetRoots = managedToolStateRoots(roots.stateDir);
   const plan = diagnostics.length
     ? undefined
     : await planInstall(
@@ -243,6 +282,7 @@ export async function planProviderOperation(
           homeDir: roots.homeDir,
           stateDir: roots.stateDir,
           allowedTargetRoots,
+          allowedStateTargetRoots: stateTargetRoots,
         },
         artifacts,
         { replaceConflictArtifactIds: options.replaceConflictArtifactIds },
@@ -252,6 +292,7 @@ export async function planProviderOperation(
     diagnostics,
     ...(plan === undefined ? {} : { plan }),
     roots: allowedTargetRoots,
+    stateTargetRoots,
   };
 }
 
@@ -266,6 +307,7 @@ export async function applyProviderOperation(
       homeDir: roots.homeDir,
       stateDir: roots.stateDir,
       allowedTargetRoots: operation.roots,
+      allowedStateTargetRoots: operation.stateTargetRoots,
     },
     operation.plan,
   );

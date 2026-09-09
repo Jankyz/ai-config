@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -19,6 +20,7 @@ import {
   readRollbackReceipt,
   rollbackInstallTransaction,
 } from "../installer/index.js";
+import { managedToolStateRoots } from "../tools/index.js";
 
 const help = `ai-config — provider-neutral AI coding-agent environment configuration manager
 
@@ -136,6 +138,16 @@ function print(lines: readonly string[]) {
   for (const line of lines) console.log(line);
 }
 
+function pythonStatus(): string {
+  const result = spawnSync("python3", ["--version"], {
+    encoding: "utf8",
+    timeout: 2_000,
+  });
+  if (result.status === 0)
+    return `DEPENDENCY ui-ux-pro-max Python AVAILABLE ${(result.stdout || result.stderr).trim()}`;
+  return "DEGRADED ui-ux-pro-max Python unavailable; local searchable evidence is unavailable.";
+}
+
 async function run() {
   const args = process.argv.slice(2);
   if (args.length === 1 && ["--version", "-v"].includes(args[0]!))
@@ -157,12 +169,22 @@ async function run() {
         ? `BLOCKED registry/lock: ${sourceError}`
         : "NOOP registry/lock valid",
     );
+    console.log(pythonStatus());
+    console.log("EXTERNAL_CAPABILITY OpenAI Product Design optional");
+    console.log("EXTERNAL_CAPABILITY Browser/Playwright optional");
     const providers: ProviderId[] = parsed.provider
       ? [parsed.provider]
       : ["codex", "claude"];
     let unhealthy = Boolean(sourceError);
     for (const provider of providers) {
-      const operation = await planProviderOperation(provider, "setup", roots);
+      const operation = await planProviderOperation(provider, "setup", roots, {
+        ...(roots.env.AI_CONFIG_TEST_SKIP_EXTERNAL === "1"
+          ? { skipExternal: true }
+          : {}),
+        ...(roots.env.AI_CONFIG_TEST_SKIP_MANAGED_TOOL === "1"
+          ? { skipManagedTool: true }
+          : {}),
+      });
       print(operationStatus(operation).map((line) => `${provider}: ${line}`));
       unhealthy ||=
         !operationCanApply(operation) ||
@@ -182,18 +204,19 @@ async function run() {
       ),
     );
     if (parsed.apply) {
-      const allowedTargetRoots =
-        parsed.provider === "codex"
-          ? [
-              dirname(receipt.actions[0]?.targetPath ?? roots.homeDir),
-              `${roots.homeDir}/.agents`,
-            ]
-          : [`${roots.homeDir}/.claude`];
+      const allowedTargetRoots = [
+        ...new Set(
+          receipt.actions
+            .filter((action) => !action.targetPath.startsWith(roots.stateDir))
+            .map((action) => dirname(action.targetPath)),
+        ),
+      ];
       const applied = await rollbackInstallTransaction(
         {
           homeDir: roots.homeDir,
           stateDir: roots.stateDir,
           allowedTargetRoots,
+          allowedStateTargetRoots: managedToolStateRoots(roots.stateDir),
         },
         parsed.transaction!,
       );
@@ -205,7 +228,15 @@ async function run() {
     parsed.provider!,
     parsed.command,
     roots,
-    { replaceConflictArtifactIds: parsed.replaceConflictArtifactIds },
+    {
+      replaceConflictArtifactIds: parsed.replaceConflictArtifactIds,
+      ...(roots.env.AI_CONFIG_TEST_SKIP_EXTERNAL === "1"
+        ? { skipExternal: true }
+        : {}),
+      ...(roots.env.AI_CONFIG_TEST_SKIP_MANAGED_TOOL === "1"
+        ? { skipManagedTool: true }
+        : {}),
+    },
   );
   print(operationStatus(operation));
   if (!operationCanApply(operation)) {

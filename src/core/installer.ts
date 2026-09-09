@@ -13,6 +13,8 @@ export interface InstallerContext {
   readonly homeDir: string;
   readonly stateDir: string;
   readonly allowedTargetRoots: readonly string[];
+  /** Narrow state-owned targets for managed runtime tools. */
+  readonly allowedStateTargetRoots?: readonly string[];
 }
 
 export interface DesiredArtifact {

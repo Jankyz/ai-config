@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI Config Domain Modeling"
+  short_description: "Explicitly build and sharpen a domain model"
+  default_prompt: "Use $aic-domain-modeling to refine approved project terminology and durable context."
+policy:
+  allow_implicit_invocation: false

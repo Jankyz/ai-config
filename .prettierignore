@@ -4,5 +4,7 @@ coverage/
 .idea/
 .omx/
 .venv/
+third_party/
+tests/fixtures/phase91-external/
 docs/architecture/AI-CONFIG-MASTER-ARCHITECTURE-V1.md
 docs/plans/*.md

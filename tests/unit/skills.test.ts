@@ -22,10 +22,14 @@ describe("native skill catalog", () => {
       "aic-ui-components",
       "aic-ui-generate",
       "aic-ui-review",
+      "aic-product-design-lead",
+      "aic-tdd",
+      "aic-domain-modeling",
+      "aic-shadcn",
     ]);
     const catalog = await validateNativeSkillCatalog();
     expect(catalog).toMatchObject({ valid: true, errors: [] });
-    expect(catalog.skills).toHaveLength(14);
+    expect(catalog.skills).toHaveLength(18);
     for (const skill of catalog.skills) {
       expect(skill.skillMarkdown).toContain(`name: ${skill.name}`);
       expect(skill.codexMetadata).toContain("allow_implicit_invocation: false");
@@ -65,8 +69,8 @@ describe("native skill catalog", () => {
     expect(components.skillMarkdown).toMatch(/approved implementation/i);
     for (const command of ["21st search", "21st get", "21st theme", "21st add"])
       expect(components.skillMarkdown).toContain(command);
-    expect(components.skillMarkdown).toContain("--type c");
-    expect(components.skillMarkdown).not.toContain("--type component");
+    expect(components.skillMarkdown).toContain("--type component");
+    expect(components.skillMarkdown).not.toMatch(/--type c(?:\s|$)/);
     expect(components.skillMarkdown).toContain(
       "BLOCKED — 21st paid operation requires owner authorization",
     );

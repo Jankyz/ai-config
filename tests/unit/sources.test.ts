@@ -160,11 +160,22 @@ describe("external source validation", () => {
       await expect(readFile(path, "utf8")).resolves.toContain(
         "Distributed under Apache-2.0; see `third_party/21st/LICENSE`.",
       );
-    expect(registry.sources.find((item) => item.id === "oh-my-codex")).toEqual(
-      expect.objectContaining({
-        resources: [{ id: "oh-my-codex-reference", mode: "reference" }],
-      }),
-    );
+    expect(
+      registry.sources.find((item) => item.id === "oh-my-codex"),
+    ).toBeUndefined();
+    expect(
+      registry.sources.find((item) => item.id === "21st-cli"),
+    ).toMatchObject({
+      kind: "npm",
+      package: "@21st-dev/cli",
+      version: "1.17.0",
+    });
+    expect(
+      registry.sources.find((item) => item.id === "ui-ux-pro-max"),
+    ).toMatchObject({
+      repository: "nextlevelbuilder/ui-ux-pro-max-skill",
+      resources: [{ id: "ui-ux-pro-max-core", mode: "external-managed" }],
+    });
   });
 
   it("rejects actual NUL, traversal, and absolute resource paths", () => {

@@ -5,4 +5,4 @@ commits, versions, resource digests, and exact license-evidence digests that a f
 The registry and lock must validate as one consistent pair. Tracking branches are only update-discovery
 inputs; setup must never install from a moving reference.
 
-Matt Pocock Skills and Oh My Codex are reference-only. They fetch, install, vendor, execute, and activate nothing. The two selected 21st resources are adapted into local canonical UI skills; their pinned revision and resource digests are review input for future changes. See [external source architecture](../docs/architecture/external-sources.md).
+The selected Matt, UI UX Pro Max, shadcn, and 21st resources are explicitly classified in the registry. External-managed snapshots remain byte-identical to their locks; adapted resources retain their provenance while ai-config owns their local behavior. Setup never follows a moving upstream reference or executes an upstream installer. See [external source architecture](../docs/architecture/external-sources.md).

@@ -13,6 +13,7 @@
   "files": [
     "bin",
     "dist/cli",
+    "dist/cleanup",
     "dist/core",
     "dist/installer",
     "dist/sources",
@@ -21,10 +22,14 @@
     "dist/standards",
     "dist/templates",
     "dist/state",
+    "dist/tools",
     "upstream/registry.json",
     "upstream/lock.json",
     "THIRD_PARTY_NOTICES.md",
     "third_party/21st/LICENSE",
+    "third_party/matt/LICENSE",
+    "third_party/shadcn/LICENSE",
+    "third_party/ui-ux-pro-max/LICENSE",
     "standards",
     "skills",
     "templates/project"

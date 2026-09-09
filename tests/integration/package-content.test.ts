@@ -36,10 +36,26 @@ describe("package contents", () => {
         "upstream/lock.json",
         "THIRD_PARTY_NOTICES.md",
         "third_party/21st/LICENSE",
+        "third_party/matt/LICENSE",
+        "third_party/shadcn/LICENSE",
+        "third_party/ui-ux-pro-max/LICENSE",
       ]),
     );
     expect(paths.some((path) => path.startsWith("tests/"))).toBe(false);
     expect(paths.some((path) => path.startsWith("docs/plans/"))).toBe(false);
     expect(paths).not.toContain("third_party/21st/NOTICE");
+    expect(paths.some((path) => path.endsWith(".tgz"))).toBe(false);
+    expect(
+      paths.some((path) => path.startsWith("third_party/21st/1.17.0/package/")),
+    ).toBe(false);
+    expect(
+      paths.some((path) => path.startsWith("third_party/matt/skills/")),
+    ).toBe(false);
+    expect(
+      paths.some((path) => path.startsWith("third_party/ui-ux-pro-max/src/")),
+    ).toBe(false);
+    expect(
+      paths.some((path) => path.startsWith("third_party/shadcn/skill/")),
+    ).toBe(false);
   });
 });

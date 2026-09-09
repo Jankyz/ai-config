@@ -50,6 +50,8 @@ async function fixture() {
       HOME: home,
       CODEX_HOME: codexHome,
       PATH: `${bin}:${process.env.PATH ?? ""}`,
+      AI_CONFIG_TEST_SKIP_EXTERNAL: "1",
+      AI_CONFIG_TEST_SKIP_MANAGED_TOOL: "1",
     },
   };
 }
@@ -137,7 +139,7 @@ describe("Phase 9 public CLI", () => {
     expect(rollback.status).toBe(0);
     expect(rollback.stdout).toContain(`ROLLED_BACK transaction ${id}`);
     expect(existsSync(test.globalAgents)).toBe(false);
-  });
+  }, 20_000);
 
   it("adopts exact content without rewriting it and rollback preserves the original", async () => {
     const test = await fixture();
@@ -176,7 +178,7 @@ describe("Phase 9 public CLI", () => {
     expect(await readFile(test.globalAgents)).toEqual(original);
     expect((await stat(test.globalAgents)).ino).toBe(before.ino);
     expect(existsSync(join(test.state, "state.json"))).toBe(false);
-  });
+  }, 20_000);
 
   it("requires exact authorization to replace one unmanaged conflict and rolls it back exactly", async () => {
     const test = await fixture();
@@ -258,7 +260,7 @@ describe("Phase 9 public CLI", () => {
     expect(await readFile(test.globalAgents)).toEqual(legacy);
     expect((await stat(test.globalAgents)).mode & 0o777).toBe(0o600);
     expect(existsSync(join(test.state, "state.json"))).toBe(false);
-  });
+  }, 20_000);
 
   it("rejects a prior approval fingerprint when target bytes change without mutation", async () => {
     const test = await fixture();

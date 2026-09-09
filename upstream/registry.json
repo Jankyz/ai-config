@@ -36,19 +36,82 @@
         "scope": "repository",
         "evidence": "LICENSE"
       },
-      "resources": [{ "id": "matt-skills-reference", "mode": "reference" }]
+      "resources": [
+        {
+          "id": "matt-tdd",
+          "path": "skills/engineering/tdd",
+          "mode": "adapted",
+          "localPath": "skills/aic-tdd"
+        },
+        {
+          "id": "matt-domain-modeling",
+          "path": "skills/engineering/domain-modeling",
+          "mode": "adapted",
+          "localPath": "skills/aic-domain-modeling"
+        },
+        {
+          "id": "matt-codebase-design",
+          "path": "skills/engineering/codebase-design",
+          "mode": "external-managed",
+          "installable": true
+        },
+        {
+          "id": "matt-writing-for-agents",
+          "path": "skills/productivity/writing-for-agents",
+          "mode": "external-managed",
+          "installable": true
+        }
+      ]
     },
     {
-      "id": "oh-my-codex",
+      "id": "ui-ux-pro-max",
       "kind": "github",
-      "repository": "Yeachan-Heo/oh-my-codex",
+      "repository": "nextlevelbuilder/ui-ux-pro-max-skill",
       "track": { "type": "branch", "value": "main" },
       "license": {
         "expected": "MIT",
         "scope": "repository",
         "evidence": "LICENSE"
       },
-      "resources": [{ "id": "oh-my-codex-reference", "mode": "reference" }]
+      "resources": [
+        {
+          "id": "ui-ux-pro-max-core",
+          "path": "src/ui-ux-pro-max",
+          "mode": "external-managed",
+          "installable": true
+        }
+      ]
+    },
+    {
+      "id": "shadcn-ui",
+      "kind": "github",
+      "repository": "shadcn-ui/ui",
+      "track": { "type": "branch", "value": "main" },
+      "license": {
+        "expected": "MIT",
+        "scope": "repository",
+        "evidence": "LICENSE.md"
+      },
+      "resources": [
+        {
+          "id": "shadcn-skill",
+          "path": "skills/shadcn",
+          "mode": "adapted",
+          "localPath": "skills/aic-shadcn"
+        }
+      ]
+    },
+    {
+      "id": "21st-cli",
+      "kind": "npm",
+      "package": "@21st-dev/cli",
+      "version": "1.17.0",
+      "license": {
+        "expected": "MIT",
+        "scope": "repository",
+        "evidence": "metadata:license"
+      },
+      "resources": [{ "id": "21st-cli-package", "mode": "reference" }]
     }
   ]
 }

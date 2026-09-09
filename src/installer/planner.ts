@@ -34,14 +34,27 @@ export async function validateTarget(
     );
   const normalized = resolve(target);
   const stateRoot = await validateStateLayout(context.stateDir);
-  if (inside(stateRoot, normalized) || inside(normalized, stateRoot))
+  const stateTargetRoots = context.allowedStateTargetRoots ?? [];
+  const allowedInState = stateTargetRoots.some(
+    (entry) =>
+      absolutePath(entry) &&
+      resolve(entry) !== normalized &&
+      inside(resolve(entry), normalized) &&
+      inside(stateRoot, resolve(entry)),
+  );
+  if (
+    (inside(stateRoot, normalized) || inside(normalized, stateRoot)) &&
+    !allowedInState
+  )
     throw new InstallerError(
       "INVALID_TARGET",
       "Artifacts must not overlap installer state.",
     );
   for (const root of context.allowedTargetRoots)
     await safeRoot(root, "INVALID_TARGET");
-  const root = context.allowedTargetRoots
+  for (const root of stateTargetRoots)
+    await safePath(root, "directory", "INVALID_TARGET");
+  const root = [...context.allowedTargetRoots, ...stateTargetRoots]
     .map((entry) => resolve(entry))
     .find((entry) => entry !== normalized && inside(entry, normalized));
   if (!root)
@@ -171,7 +184,10 @@ export async function planInstall(
     for (const artifact of desired) {
       if (
         absolutePath(artifact.targetPath) &&
-        !context.allowedTargetRoots.some(
+        ![
+          ...context.allowedTargetRoots,
+          ...(context.allowedStateTargetRoots ?? []),
+        ].some(
           (root) =>
             absolutePath(root) &&
             resolve(root) !== resolve(artifact.targetPath) &&

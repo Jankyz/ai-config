@@ -38,7 +38,9 @@ body. Claude invocation remains `/aic-*`. Codex-only `agents/openai.yaml` is nev
 `aic-bootstrap-project` receives its `assets/project/` files from `templates/project/`; the
 installer copies those bytes unchanged.
 
-The Phase 8 UI extensions `aic-ui-components`, `aic-ui-generate`, and `aic-ui-review` use the same translation and remain explicitly invoked as `/aic-ui-*`. The first two require an already available 21st CLI for their external capability; installation and authentication remain outside ai-config. Visual review requires current and approved reference screenshots and is read-only.
+The Phase 8 UI extensions `aic-ui-components`, `aic-ui-generate`, and `aic-ui-review` use the same translation and remain explicitly invoked as `/aic-ui-*`. The first two use the managed exact 21st CLI when installed; authentication remains outside ai-config. Visual review requires current and approved reference screenshots and is read-only.
+
+Phase 9.1 adds explicit adapted `aic-product-design-lead`, `aic-tdd`, `aic-domain-modeling`, and `aic-shadcn` skills plus approved external-managed snapshots. External skills preserve their upstream model-invocation semantics; Codex-only metadata is excluded.
 
 ## Project bridge
 

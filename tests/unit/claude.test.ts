@@ -309,6 +309,7 @@ describe("Claude global instructions", () => {
       verifyClaudeCoreWorkflow({
         detection: test.detection,
         stateDir: test.stateDir,
+        skipExternal: true,
       }),
     ).resolves.toMatchObject({ status: "NOT_VERIFIED" });
   });

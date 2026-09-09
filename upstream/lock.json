@@ -29,7 +29,28 @@
       "sourceId": "matt-skills",
       "kind": "github",
       "commit": "3cca18b368ae95cdbdebbff572ccafa662551015",
-      "resources": [{ "resourceId": "matt-skills-reference" }],
+      "resources": [
+        {
+          "resourceId": "matt-tdd",
+          "path": "skills/engineering/tdd",
+          "digest": "f3a0fc90535d2a6b37232317c01b2979d6d415846e3da4fb69f22e08735b588c"
+        },
+        {
+          "resourceId": "matt-domain-modeling",
+          "path": "skills/engineering/domain-modeling",
+          "digest": "4b0cccb213b0c28f0beeaf43cbbea25aea73437808d8317bc4192c4cb4bf4d35"
+        },
+        {
+          "resourceId": "matt-codebase-design",
+          "path": "skills/engineering/codebase-design",
+          "digest": "aa5baa622be4669b6cfdeb9bcc62b42c23e9fbb32ecc5de478e036efe268c435"
+        },
+        {
+          "resourceId": "matt-writing-for-agents",
+          "path": "skills/productivity/writing-for-agents",
+          "digest": "0c6cc33a8d2f9286e5116ffb89d830656160e3b1a607fa4b05b8ec15536b555c"
+        }
+      ],
       "license": {
         "spdx": "MIT",
         "path": "LICENSE",
@@ -39,17 +60,56 @@
       "resolvedAt": "2026-09-07T06:47:51.036Z"
     },
     {
-      "sourceId": "oh-my-codex",
+      "sourceId": "ui-ux-pro-max",
       "kind": "github",
-      "commit": "304fb3b4825c4132c273732b14d2d5e86b54f8e3",
-      "resources": [{ "resourceId": "oh-my-codex-reference" }],
+      "commit": "4aad0584d92131626b16d4ff4d77f0455385013c",
+      "resources": [
+        {
+          "resourceId": "ui-ux-pro-max-core",
+          "path": "src/ui-ux-pro-max",
+          "digest": "e33b3f613333da1dd7d7795998cffb03829f4d7075bc2b58dfe9a3a37ba1402a"
+        }
+      ],
       "license": {
         "spdx": "MIT",
         "path": "LICENSE",
         "scope": "repository",
-        "digest": "4fd42de3188b327edb30d8997f8669b590ccfde847bb85af2e73a5c7161d4ec0"
+        "digest": "738f69dfa83db5c347c678fb9d90e560877059f0de93a327c39001bff92dc014"
       },
-      "resolvedAt": "2026-09-07T06:47:51.884Z"
+      "resolvedAt": "2026-09-08T12:00:00.000Z"
+    },
+    {
+      "sourceId": "shadcn-ui",
+      "kind": "github",
+      "commit": "3ba91b1cc83e1bbe4ab35a422ff2a694849c5048",
+      "resources": [
+        {
+          "resourceId": "shadcn-skill",
+          "path": "skills/shadcn",
+          "digest": "109c88754c4fadc055461f6c4187088633e8044a96d018925b1ab0e7bfe2eba4"
+        }
+      ],
+      "license": {
+        "spdx": "MIT",
+        "path": "LICENSE.md",
+        "scope": "repository",
+        "digest": "1564074e13439397221ffd522e2e504d56561994a23d371aa5e3ad43e4f5423f"
+      },
+      "resolvedAt": "2026-09-08T12:00:00.000Z"
+    },
+    {
+      "sourceId": "21st-cli",
+      "kind": "npm",
+      "version": "1.17.0",
+      "integrity": "sha512-6GLjeoEOh8AcBV+ocEGPhLCtyaUgajKt/uxJVWylwxL8OX28w10+AR/xFChCKdte+AsBlp3e8Ep37uMynyBMHg==",
+      "resources": [{ "resourceId": "21st-cli-package" }],
+      "license": {
+        "spdx": "MIT",
+        "path": "metadata:license",
+        "scope": "repository",
+        "digest": "e5dcffe836b6ec8a58e492419b550e65fb8cbdc308503979e5dacb33ac7ea3b7"
+      },
+      "resolvedAt": "2026-09-08T12:00:00.000Z"
     }
   ]
 }

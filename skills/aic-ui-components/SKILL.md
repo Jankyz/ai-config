@@ -22,8 +22,8 @@ Use the existing `21st` CLI to discover and inspect relevant components or theme
 ## Discovery — read-only
 
 ```text
-21st search "<query>" --limit <N> [--type <c|theme|template>] [--json]
-21st search button --type c
+21st search "<query>" --limit <N> [--type <component|theme|template>] [--json]
+21st search button --type component
 21st search dark --type theme
 21st get <id> [--json]
 21st theme <id> [--json]

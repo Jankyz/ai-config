@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI Config Product Design Lead"
+  short_description: "Audit, improve, or redesign product UI"
+  default_prompt: "Use $aic-product-design-lead for this product UI task. Inspect the existing product first and use the appropriate explicit design workflow."
+policy:
+  allow_implicit_invocation: false

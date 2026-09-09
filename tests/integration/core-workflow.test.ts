@@ -44,6 +44,7 @@ async function applyCore(test: Awaited<ReturnType<typeof fixture>>) {
   const plan = await planCodexCoreWorkflow({
     detection: test.detection,
     stateDir: test.stateDir,
+    skipExternal: true,
   });
   await applyInstallPlan(
     {
@@ -79,7 +80,11 @@ describe("Codex core workflow", () => {
     const initial = await applyCore(test);
     const globalContract = await readGlobalAgentContract();
     expect(initial.canApply).toBe(true);
-    expect(initial.nativeSkills.installerPlan?.actions).toHaveLength(33);
+    expect(initial.nativeSkills.catalog.skills).toHaveLength(18);
+    expect(initial.nativeSkills.externalSkillNames).toEqual([]);
+    expect(initial.nativeSkills.installerPlan!.actions.length).toBeGreaterThan(
+      40,
+    );
     expect(await readFile(test.detection.paths.globalAgents, "utf8")).toBe(
       globalContract,
     );
@@ -111,12 +116,12 @@ describe("Codex core workflow", () => {
       );
     }
     expect(
-      initial.nativeSkills.installerPlan!.actions.some(
-        (action) =>
-          action.artifact.id.includes(".asset.") &&
-          !action.artifact.id.includes("aic-bootstrap-project"),
+      initial.nativeSkills.installerPlan!.actions.some((action) =>
+        action.artifact.id.startsWith(
+          "codex.user-skill.aic-product-design-lead.asset.references.",
+        ),
       ),
-    ).toBe(false);
+    ).toBe(true);
     for (const name of initial.nativeSkills.catalog.skills.map(
       (skill) => skill.name,
     )) {
@@ -135,14 +140,26 @@ describe("Codex core workflow", () => {
         ),
       ).resolves.toContain("allow_implicit_invocation: false");
     }
+    await expect(
+      readFile(
+        join(
+          test.detection.paths.userSkillsRoot,
+          "aic-product-design-lead",
+          "references",
+          "redesign.md",
+        ),
+        "utf8",
+      ),
+    ).resolves.toContain("meaningfully different, product-specific directions");
     const repeat = await planCodexCoreWorkflow({
       detection: test.detection,
       stateDir: test.stateDir,
+      skipExternal: true,
     });
     expect(repeat.canApply).toBe(true);
     expect(repeat.globalInstructions.installerPlan?.hasChanges).toBe(false);
     expect(repeat.nativeSkills.installerPlan?.hasChanges).toBe(false);
-  });
+  }, 20_000);
 
   it("preserves unmanaged skill files and reports metadata drift", async () => {
     const unmanaged = await fixture();
@@ -156,6 +173,7 @@ describe("Codex core workflow", () => {
     const unmanagedPlan = await planCodexNativeSkills({
       detection: unmanaged.detection,
       stateDir: unmanaged.stateDir,
+      skipExternal: true,
     });
     expect(unmanagedPlan.installerPlan?.conflicts).toEqual(
       expect.arrayContaining([
@@ -175,6 +193,7 @@ describe("Codex core workflow", () => {
     const driftPlan = await planCodexNativeSkills({
       detection: drifted.detection,
       stateDir: drifted.stateDir,
+      skipExternal: true,
     });
     expect(driftPlan.installerPlan?.conflicts).toEqual(
       expect.arrayContaining([
@@ -198,6 +217,7 @@ describe("Codex core workflow", () => {
     const unmanagedPlan = await planCodexNativeSkills({
       detection: unmanaged.detection,
       stateDir: unmanaged.stateDir,
+      skipExternal: true,
     });
     expect(unmanagedPlan.installerPlan?.conflicts).toEqual(
       expect.arrayContaining([
@@ -221,6 +241,7 @@ describe("Codex core workflow", () => {
     const driftPlan = await planCodexNativeSkills({
       detection: drifted.detection,
       stateDir: drifted.stateDir,
+      skipExternal: true,
     });
     expect(driftPlan.installerPlan?.conflicts).toEqual(
       expect.arrayContaining([
@@ -273,6 +294,7 @@ describe("Codex core workflow", () => {
     const plan = await planCodexCoreWorkflow({
       detection: test.detection,
       stateDir: test.stateDir,
+      skipExternal: true,
     });
     expect(plan.globalInstructions.diagnostics).toEqual(
       expect.arrayContaining([

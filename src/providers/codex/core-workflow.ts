@@ -5,6 +5,7 @@ import {
 } from "./plan.js";
 import { planCodexNativeSkills, type CodexNativeSkillsPlan } from "./skills.js";
 import { readGlobalAgentContract } from "../../standards/index.js";
+import type { HttpClient } from "../../sources/github.js";
 export interface CodexCoreWorkflowPlan {
   readonly globalInstructions: CodexGlobalInstructionsPlan;
   readonly nativeSkills: CodexNativeSkillsPlan;
@@ -15,6 +16,8 @@ export async function planCodexCoreWorkflow(input: {
   readonly detection: CodexDetection;
   readonly stateDir: string;
   readonly replaceConflictArtifactIds?: readonly string[] | undefined;
+  readonly dependencyClient?: HttpClient;
+  readonly skipExternal?: boolean;
 }): Promise<CodexCoreWorkflowPlan> {
   const [content, nativeSkills] = await Promise.all([
     readGlobalAgentContract(),
@@ -22,8 +25,14 @@ export async function planCodexCoreWorkflow(input: {
       detection: input.detection,
       stateDir: input.stateDir,
       replaceConflictArtifactIds: input.replaceConflictArtifactIds?.filter(
-        (id) => id.startsWith("codex.user-skill."),
+        (id) =>
+          id.startsWith("codex.user-skill.") ||
+          id.startsWith("codex.external-skill."),
       ),
+      ...(input.dependencyClient === undefined
+        ? {}
+        : { dependencyClient: input.dependencyClient }),
+      ...(input.skipExternal ? { skipExternal: true } : {}),
     }),
   ]);
   const globalInstructions = await planCodexGlobalInstructions({

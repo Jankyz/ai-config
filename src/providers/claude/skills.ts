@@ -3,14 +3,17 @@ import { join } from "node:path";
 import type { InstallPlan, InstallerContext } from "../../core/installer.js";
 import { planInstall } from "../../installer/index.js";
 import {
+  externalSkillAssets,
   validateNativeSkillCatalog,
   type NativeSkillCatalogValidation,
 } from "../../skills/index.js";
 import type { ClaudeDetection } from "./detect.js";
+import type { HttpClient } from "../../sources/github.js";
 import { inspectClaude } from "./inspect.js";
 
 export interface ClaudeNativeSkillsPlan {
   readonly catalog: NativeSkillCatalogValidation;
+  readonly externalSkillNames: readonly string[];
   readonly diagnostics: readonly string[];
   readonly installerPlan?: InstallPlan;
   readonly canApply: boolean;
@@ -41,8 +44,15 @@ export async function planClaudeNativeSkills(input: {
   readonly detection: ClaudeDetection;
   readonly stateDir: string;
   readonly replaceConflictArtifactIds?: readonly string[] | undefined;
+  readonly dependencyClient?: HttpClient;
+  readonly skipExternal?: boolean;
 }): Promise<ClaudeNativeSkillsPlan> {
-  const catalog = await validateNativeSkillCatalog();
+  const [catalog, external] = await Promise.all([
+    validateNativeSkillCatalog(),
+    input.skipExternal
+      ? Promise.resolve([])
+      : externalSkillAssets("claude", input.dependencyClient),
+  ]);
   const diagnostics = [...catalog.errors];
   if (input.detection.error) diagnostics.push(input.detection.error);
   else if (!input.detection.installed)
@@ -56,39 +66,67 @@ export async function planClaudeNativeSkills(input: {
     diagnostics.push(
       "Custom CLAUDE_CONFIG_DIR is unsupported for configuration apply in Phase 6.",
     );
-  if (diagnostics.length) return { catalog, diagnostics, canApply: false };
+  if (diagnostics.length)
+    return {
+      catalog,
+      externalSkillNames: external.map((skill) => skill.name),
+      diagnostics,
+      canApply: false,
+    };
 
   let artifacts;
   try {
-    artifacts = catalog.skills.flatMap((skill) => [
-      {
-        id: `claude.user-skill.${skill.name}.instructions`,
-        targetPath: join(
-          input.detection.paths.userSkillsRoot,
-          skill.name,
-          "SKILL.md",
-        ),
-        content: renderClaudeSkillMarkdown(skill.skillMarkdown),
-        ownership: "managed" as const,
-        mode: 0o644,
-      },
-      ...skill.bundledAssets.map((asset) => ({
-        id: `claude.user-skill.${skill.name}.asset.${asset.path.replaceAll("/", ".")}`,
-        targetPath: join(
-          input.detection.paths.userSkillsRoot,
-          skill.name,
-          asset.path,
-        ),
-        content: asset.content,
-        ownership: "managed" as const,
-        mode: 0o644,
-      })),
-    ]);
+    artifacts = [
+      ...catalog.skills.flatMap((skill) => [
+        {
+          id: `claude.user-skill.${skill.name}.instructions`,
+          targetPath: join(
+            input.detection.paths.userSkillsRoot,
+            skill.name,
+            "SKILL.md",
+          ),
+          content: renderClaudeSkillMarkdown(skill.skillMarkdown),
+          ownership: "managed" as const,
+          mode: 0o644,
+        },
+        ...skill.bundledAssets.map((asset) => ({
+          id: `claude.user-skill.${skill.name}.asset.${asset.path.replaceAll("/", ".")}`,
+          targetPath: join(
+            input.detection.paths.userSkillsRoot,
+            skill.name,
+            asset.path,
+          ),
+          content: asset.content,
+          ownership: "managed" as const,
+          mode: 0o644,
+        })),
+      ]),
+      ...external.flatMap((skill) =>
+        skill.files
+          .filter((file) => file.path !== "agents/openai.yaml")
+          .map((file) => ({
+            id: `claude.external-skill.${skill.name}.${file.path.replaceAll("/", ".")}`,
+            targetPath: join(
+              input.detection.paths.userSkillsRoot,
+              skill.name,
+              file.path,
+            ),
+            content: file.content,
+            ownership: "managed" as const,
+            mode: 0o644,
+          })),
+      ),
+    ];
   } catch (error) {
     diagnostics.push(
       `Cannot render canonical skills for Claude: ${error instanceof Error ? error.message : String(error)}`,
     );
-    return { catalog, diagnostics, canApply: false };
+    return {
+      catalog,
+      externalSkillNames: external.map((skill) => skill.name),
+      diagnostics,
+      canApply: false,
+    };
   }
   const context: InstallerContext = {
     homeDir: input.detection.paths.home,
@@ -100,6 +138,7 @@ export async function planClaudeNativeSkills(input: {
   });
   return {
     catalog,
+    externalSkillNames: external.map((skill) => skill.name),
     diagnostics,
     installerPlan,
     canApply: installerPlan.canApply,
