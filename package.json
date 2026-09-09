@@ -1,8 +1,27 @@
 {
-  "name": "ai-config-development",
-  "version": "0.0.0",
-  "description": "Provider-neutral AI coding-agent environment configuration manager.",
-  "private": true,
+  "name": "ai-config",
+  "version": "0.1.0",
+  "description": "Reproducible environment manager for AI coding agents.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jankyz/ai-config.git"
+  },
+  "homepage": "https://github.com/Jankyz/ai-config#readme",
+  "bugs": {
+    "url": "https://github.com/Jankyz/ai-config/issues"
+  },
+  "keywords": [
+    "ai",
+    "coding-agent",
+    "codex",
+    "claude-code",
+    "developer-tools"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "type": "module",
   "engines": {
     "node": ">=24"
@@ -36,9 +55,9 @@
   ],
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.json",
-    "test": "npm run build && vitest run",
+    "test": "npm run test:unit && npm run test:integration",
     "test:unit": "vitest run tests/unit",
-    "test:integration": "npm run build && vitest run tests/integration",
+    "test:integration": "npm run build && vitest run tests/integration --maxWorkers=1",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
     "format": "prettier --write .",

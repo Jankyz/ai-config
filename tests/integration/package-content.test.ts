@@ -13,7 +13,7 @@ afterEach(async () => {
 });
 
 describe("package contents", () => {
-  it("includes the project templates but excludes tests and plans", async () => {
+  it("includes the public runtime assets and excludes development material", async () => {
     const cache = await mkdtemp(join(tmpdir(), "ai-config-pack-cache-"));
     roots.push(cache);
     const output = execFileSync(
@@ -27,6 +27,21 @@ describe("package contents", () => {
     const paths = packed[0]?.files.map((file) => file.path) ?? [];
     expect(paths).toEqual(
       expect.arrayContaining([
+        "bin/ai-config",
+        "dist/cli/index.js",
+        "dist/core/orchestration.js",
+        "dist/providers/codex/index.js",
+        "dist/skills/catalog.js",
+        "dist/standards/index.js",
+        "dist/templates/index.js",
+        "skills/aic-plan/SKILL.md",
+        "skills/aic-product-design-lead/SKILL.md",
+        "skills/aic-tdd/SKILL.md",
+        "skills/aic-domain-modeling/SKILL.md",
+        "skills/aic-shadcn/SKILL.md",
+        "skills/aic-ui-components/SKILL.md",
+        "skills/aic-ui-generate/SKILL.md",
+        "standards/global-agent-contract.md",
         "templates/project/AGENTS.md",
         "templates/project/CONTEXT.md",
         "templates/project/ARCHITECTURE.md",
@@ -41,21 +56,22 @@ describe("package contents", () => {
         "third_party/ui-ux-pro-max/LICENSE",
       ]),
     );
-    expect(paths.some((path) => path.startsWith("tests/"))).toBe(false);
-    expect(paths.some((path) => path.startsWith("docs/plans/"))).toBe(false);
+    for (const prefix of [
+      "tests/",
+      "docs/plans/",
+      "node_modules/",
+      "third_party/matt/skills/",
+      "third_party/ui-ux-pro-max/src/",
+      "third_party/shadcn/skill/",
+      "third_party/21st/1.17.0/package/",
+      ".npm-cache/",
+      ".ai-config/",
+    ])
+      expect(paths.some((path) => path.startsWith(prefix))).toBe(false);
     expect(paths).not.toContain("third_party/21st/NOTICE");
     expect(paths.some((path) => path.endsWith(".tgz"))).toBe(false);
     expect(
-      paths.some((path) => path.startsWith("third_party/21st/1.17.0/package/")),
-    ).toBe(false);
-    expect(
-      paths.some((path) => path.startsWith("third_party/matt/skills/")),
-    ).toBe(false);
-    expect(
-      paths.some((path) => path.startsWith("third_party/ui-ux-pro-max/src/")),
-    ).toBe(false);
-    expect(
-      paths.some((path) => path.startsWith("third_party/shadcn/skill/")),
+      paths.some((path) => /(^|\/)(?:\.env|credentials?)(?:\.|$)/i.test(path)),
     ).toBe(false);
   });
 });

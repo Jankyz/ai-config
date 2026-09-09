@@ -1,0 +1,57 @@
+name: Publish npm package
+
+on:
+  push:
+    tags:
+      - "v[0-9]*"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
+      - name: Require npm Trusted Publishing-compatible npm CLI
+        run: |
+          actual="$(npm --version)"
+          node --input-type=module -e 'const actual = process.argv[1].split(".").map(Number); const required = [11, 5, 1]; for (let i = 0; i < required.length; i += 1) { if (actual[i] > required[i]) break; if (actual[i] < required[i]) throw new Error(`npm ${process.argv[1]} is below required 11.5.1`); }' "$actual"
+      - name: Verify tag matches package version
+        run: |
+          node --input-type=module -e 'import { readFileSync } from "node:fs"; const version = JSON.parse(readFileSync("package.json", "utf8")).version; if (process.env.GITHUB_REF_NAME !== `v${version}`) throw new Error(`tag ${process.env.GITHUB_REF_NAME} does not match package version v${version}`);'
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run test:unit
+      - run: npm run test:integration
+      - run: npm run build
+      - run: npm run check
+      - run: npm run pack:check
+      - run: git diff --check
+      - name: Check whether the exact package version is already published
+        id: registry
+        run: |
+          package_name="$(node --input-type=module -e 'import { readFileSync } from "node:fs"; console.log(JSON.parse(readFileSync("package.json", "utf8")).name);')"
+          package_version="$(node --input-type=module -e 'import { readFileSync } from "node:fs"; console.log(JSON.parse(readFileSync("package.json", "utf8")).version);')"
+          set +e
+          node scripts/npm-version-status.mjs "$package_name" "$package_version"
+          status=$?
+          set -e
+          case "$status" in
+            0) echo "publish=true" >> "$GITHUB_OUTPUT" ;;
+            10) echo "publish=false" >> "$GITHUB_OUTPUT" ;;
+            *)
+              echo "REGISTRY_CHECK_FAILED ai-config@${package_version}: status ${status}" >&2
+              exit "$status"
+              ;;
+          esac
+      - if: steps.registry.outputs.publish == 'true'
+        run: npm publish
