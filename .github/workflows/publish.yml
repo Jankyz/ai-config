@@ -29,7 +29,7 @@ jobs:
         run: |
           actual="$(npm --version)"
           test "$actual" = "11.16.0"
-          node --input-type=module -e 'import { readFileSync } from "node:fs"; const pkg = JSON.parse(readFileSync("package.json", "utf8")); const tag = process.env.RELEASE_TAG; const validVersion = /^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$/.test(pkg.version); if (process.env.GITHUB_REPOSITORY !== "Jankyz/ai-config") throw new Error(`unexpected repository ${process.env.GITHUB_REPOSITORY}`); if (pkg.name !== "@jankyz/ai-config") throw new Error(`unexpected package ${pkg.name}`); if (!validVersion) throw new Error(`invalid package version ${pkg.version}`); if (tag !== `v${pkg.version}`) throw new Error(`release tag ${tag} does not match package version v${pkg.version}`);'
+          node --input-type=module -e 'import { readFileSync } from "node:fs"; const pkg = JSON.parse(readFileSync("package.json", "utf8")); const tag = process.env.RELEASE_TAG; const validVersion = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(pkg.version); if (process.env.GITHUB_REPOSITORY !== "Jankyz/ai-config") throw new Error(`unexpected repository ${process.env.GITHUB_REPOSITORY}`); if (pkg.name !== "@jankyz/ai-config") throw new Error(`unexpected package ${pkg.name}`); if (!validVersion) throw new Error(`invalid package version ${pkg.version}`); if (tag !== `v${pkg.version}`) throw new Error(`release tag ${tag} does not match package version v${pkg.version}`);'
           test "$(git rev-parse "$RELEASE_TAG^{commit}")" = "$(git rev-parse HEAD)"
       - run: npm ci
       - run: npm run typecheck
