@@ -70,7 +70,7 @@ ai-config manages its desired artifacts and state, but does not automatically ta
 
 **Native / adapted** resources are packaged with ai-config. They include canonical ai-config workflow skills and `aic-product-design-lead`, `aic-tdd`, `aic-domain-modeling`, `aic-shadcn`, `aic-ui-components`, and `aic-ui-generate`.
 
-**External-managed** resources—`codebase-design`, `writing-for-agents`, and `ui-ux-pro-max`—are acquired during setup/update from immutable identities in the packaged lock metadata. Their runtime bytes are not bundled in ai-config.
+**External-managed** resources—`codebase-design`, `wayfinder`, `grill-me`, `grilling`, `writing-for-agents`, and `ui-ux-pro-max`—are acquired during setup/update from immutable identities in the packaged lock metadata. Their runtime bytes are not bundled in ai-config.
 
 The managed tool is `@21st-dev/cli@1.17.0`, acquired at its exact locked npm identity.
 

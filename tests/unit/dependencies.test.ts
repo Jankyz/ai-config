@@ -35,6 +35,9 @@ describe("Phase 9.1 dependencies", () => {
     ]);
     expect(codex.map((skill) => skill.name)).toEqual([
       "codebase-design",
+      "wayfinder",
+      "grill-me",
+      "grilling",
       "writing-for-agents",
       "ui-ux-pro-max",
     ]);

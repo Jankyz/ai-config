@@ -46,6 +46,21 @@
           "digest": "aa5baa622be4669b6cfdeb9bcc62b42c23e9fbb32ecc5de478e036efe268c435"
         },
         {
+          "resourceId": "matt-wayfinder",
+          "path": "skills/engineering/wayfinder",
+          "digest": "ad7c599d6d15b86ec61b2fd705dc889ddee12d616e6ba2e1bf1370e233635fce"
+        },
+        {
+          "resourceId": "matt-grill-me",
+          "path": "skills/productivity/grill-me",
+          "digest": "e22a19be8ad5dfcde7d8afc151c832d167d1ef3d6d0b71d280529696512ed9ff"
+        },
+        {
+          "resourceId": "matt-grilling",
+          "path": "skills/productivity/grilling",
+          "digest": "29345d83a9dfb8ba3787ca83c20dba1e74e9f1d0eef4a4ac2fee3db169f51497"
+        },
+        {
           "resourceId": "matt-writing-for-agents",
           "path": "skills/productivity/writing-for-agents",
           "digest": "0c6cc33a8d2f9286e5116ffb89d830656160e3b1a607fa4b05b8ec15536b555c"

@@ -37,6 +37,9 @@ describe("external-managed skills", () => {
     });
     expect(plan.externalSkillNames).toEqual([
       "codebase-design",
+      "wayfinder",
+      "grill-me",
+      "grilling",
       "writing-for-agents",
       "ui-ux-pro-max",
     ]);
@@ -55,6 +58,24 @@ describe("external-managed skills", () => {
         "utf8",
       ),
     ).resolves.toContain("Codebase Design");
+    await expect(
+      readFile(
+        join(detection.paths.userSkillsRoot, "wayfinder", "SKILL.md"),
+        "utf8",
+      ),
+    ).resolves.toContain("Wayfinding");
+    await expect(
+      readFile(
+        join(detection.paths.userSkillsRoot, "grill-me", "SKILL.md"),
+        "utf8",
+      ),
+    ).resolves.toContain('Call the Skill tool with "grilling"');
+    await expect(
+      readFile(
+        join(detection.paths.userSkillsRoot, "grilling", "SKILL.md"),
+        "utf8",
+      ),
+    ).resolves.toContain("Interview the user relentlessly");
     await expect(
       readFile(
         join(detection.paths.userSkillsRoot, "writing-for-agents", "SKILL.md"),

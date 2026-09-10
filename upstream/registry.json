@@ -56,6 +56,24 @@
           "installable": true
         },
         {
+          "id": "matt-wayfinder",
+          "path": "skills/engineering/wayfinder",
+          "mode": "external-managed",
+          "installable": true
+        },
+        {
+          "id": "matt-grill-me",
+          "path": "skills/productivity/grill-me",
+          "mode": "external-managed",
+          "installable": true
+        },
+        {
+          "id": "matt-grilling",
+          "path": "skills/productivity/grilling",
+          "mode": "external-managed",
+          "installable": true
+        },
+        {
           "id": "matt-writing-for-agents",
           "path": "skills/productivity/writing-for-agents",
           "mode": "external-managed",

@@ -38,6 +38,36 @@ const sources: readonly FixtureSource[] = [
         ),
       },
       {
+        path: "skills/engineering/wayfinder",
+        directory: join(
+          fixtureRoot,
+          "matt",
+          "skills",
+          "engineering",
+          "wayfinder",
+        ),
+      },
+      {
+        path: "skills/productivity/grill-me",
+        directory: join(
+          fixtureRoot,
+          "matt",
+          "skills",
+          "productivity",
+          "grill-me",
+        ),
+      },
+      {
+        path: "skills/productivity/grilling",
+        directory: join(
+          fixtureRoot,
+          "matt",
+          "skills",
+          "productivity",
+          "grilling",
+        ),
+      },
+      {
         path: "skills/productivity/writing-for-agents",
         directory: join(
           fixtureRoot,

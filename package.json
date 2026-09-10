@@ -1,6 +1,6 @@
 {
   "name": "@jankyz/ai-config",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Reproducible environment manager for AI coding agents.",
   "license": "MIT",
   "repository": {

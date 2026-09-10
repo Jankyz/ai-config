@@ -16,7 +16,13 @@ import {
 import type { SourceRegistry } from "../sources/registry.js";
 
 export interface ExternalSkillAsset {
-  readonly name: "codebase-design" | "writing-for-agents" | "ui-ux-pro-max";
+  readonly name:
+    | "codebase-design"
+    | "wayfinder"
+    | "grill-me"
+    | "grilling"
+    | "writing-for-agents"
+    | "ui-ux-pro-max";
   readonly files: readonly {
     readonly path: string;
     readonly content: Uint8Array;
@@ -138,32 +144,57 @@ export async function externalSkillAssets(
   client: HttpClient = createHttpsClient(),
 ): Promise<readonly ExternalSkillAsset[]> {
   const { registry, lock } = await sourceState();
-  const [codebase, writing, uiUx] = await Promise.all([
-    acquireLockedResource({
-      client,
-      registry,
-      lock,
-      sourceId: "matt-skills",
-      resourceId: "matt-codebase-design",
-    }),
-    acquireLockedResource({
-      client,
-      registry,
-      lock,
-      sourceId: "matt-skills",
-      resourceId: "matt-writing-for-agents",
-    }),
-    acquireLockedResource({
-      client,
-      registry,
-      lock,
-      sourceId: "ui-ux-pro-max",
-      resourceId: "ui-ux-pro-max-core",
-    }),
-  ]);
+  const [codebase, wayfinder, grillMe, grilling, writing, uiUx] =
+    await Promise.all([
+      acquireLockedResource({
+        client,
+        registry,
+        lock,
+        sourceId: "matt-skills",
+        resourceId: "matt-codebase-design",
+      }),
+      acquireLockedResource({
+        client,
+        registry,
+        lock,
+        sourceId: "matt-skills",
+        resourceId: "matt-wayfinder",
+      }),
+      acquireLockedResource({
+        client,
+        registry,
+        lock,
+        sourceId: "matt-skills",
+        resourceId: "matt-grill-me",
+      }),
+      acquireLockedResource({
+        client,
+        registry,
+        lock,
+        sourceId: "matt-skills",
+        resourceId: "matt-grilling",
+      }),
+      acquireLockedResource({
+        client,
+        registry,
+        lock,
+        sourceId: "matt-skills",
+        resourceId: "matt-writing-for-agents",
+      }),
+      acquireLockedResource({
+        client,
+        registry,
+        lock,
+        sourceId: "ui-ux-pro-max",
+        resourceId: "ui-ux-pro-max-core",
+      }),
+    ]);
   const templates = new Map(uiUx.map((file) => [file.path, file.content]));
   return [
     { name: "codebase-design", files: codebase },
+    { name: "wayfinder", files: wayfinder },
+    { name: "grill-me", files: grillMe },
+    { name: "grilling", files: grilling },
     { name: "writing-for-agents", files: writing },
     {
       name: "ui-ux-pro-max",

@@ -329,6 +329,9 @@ aic-ui-generate
 
 ```text
 codebase-design
+wayfinder
+grill-me
+grilling
 writing-for-agents
 ui-ux-pro-max
 ```
@@ -690,6 +693,9 @@ The public package test must prove runtime acquisition of:
 
 ```text
 codebase-design
+wayfinder
+grill-me
+grilling
 writing-for-agents
 ui-ux-pro-max
 @21st-dev/cli pinned version
