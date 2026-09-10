@@ -22,8 +22,10 @@ describe("package contents", () => {
       { cwd: process.cwd(), encoding: "utf8" },
     );
     const packed = JSON.parse(output) as Array<{
+      name: string;
       files: Array<{ path: string }>;
     }>;
+    expect(packed[0]?.name).toBe("@jankyz/ai-config");
     const paths = packed[0]?.files.map((file) => file.path) ?? [];
     expect(paths).toEqual(
       expect.arrayContaining([

@@ -11,37 +11,54 @@ describe("npm publish target status", () => {
   it("marks a missing exact version as publishable", async () => {
     await expect(
       exactPackageVersionStatus(
-        "ai-config",
+        "@jankyz/ai-config",
         "0.1.0",
         async () => new Response(null, { status: 404 }),
       ),
     ).resolves.toBe("missing");
-    expect(packageStatusMessage("ai-config", "0.1.0", "missing")).toBe(
-      "PACKAGE_NOT_PUBLISHED ai-config@0.1.0",
+    expect(packageStatusMessage("@jankyz/ai-config", "0.1.0", "missing")).toBe(
+      "PACKAGE_NOT_PUBLISHED @jankyz/ai-config@0.1.0",
     );
   });
 
   it("marks an existing exact version as already published", async () => {
     await expect(
       exactPackageVersionStatus(
-        "ai-config",
+        "@jankyz/ai-config",
         "0.1.0",
         async () => new Response(null, { status: 200 }),
       ),
     ).resolves.toBe("published");
-    expect(packageStatusMessage("ai-config", "0.1.0", "published")).toBe(
-      "PACKAGE_ALREADY_PUBLISHED ai-config@0.1.0",
-    );
+    expect(
+      packageStatusMessage("@jankyz/ai-config", "0.1.0", "published"),
+    ).toBe("PACKAGE_ALREADY_PUBLISHED @jankyz/ai-config@0.1.0");
   });
 
   it("rejects unexpected registry failures instead of treating them as published", async () => {
     await expect(
       exactPackageVersionStatus(
-        "ai-config",
+        "@jankyz/ai-config",
         "0.1.0",
         async () => new Response(null, { status: 503 }),
       ),
-    ).rejects.toThrow("REGISTRY_CHECK_FAILED ai-config@0.1.0: HTTP 503");
+    ).rejects.toThrow(
+      "REGISTRY_CHECK_FAILED @jankyz/ai-config@0.1.0: HTTP 503",
+    );
+  });
+
+  it("URL-encodes a scoped package name for an exact-version lookup", async () => {
+    let requestedUrl = "";
+    await exactPackageVersionStatus(
+      "@jankyz/ai-config",
+      "0.1.0",
+      async (url) => {
+        requestedUrl = String(url);
+        return new Response(null, { status: 404 });
+      },
+    );
+    expect(requestedUrl).toBe(
+      "https://registry.npmjs.org/%40jankyz%2Fai-config/0.1.0",
+    );
   });
 
   it("uses the status result to gate publish in the workflow", async () => {

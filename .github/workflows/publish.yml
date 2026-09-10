@@ -49,7 +49,7 @@ jobs:
             0) echo "publish=true" >> "$GITHUB_OUTPUT" ;;
             10) echo "publish=false" >> "$GITHUB_OUTPUT" ;;
             *)
-              echo "REGISTRY_CHECK_FAILED ai-config@${package_version}: status ${status}" >&2
+              echo "REGISTRY_CHECK_FAILED ${package_name}@${package_version}: status ${status}" >&2
               exit "$status"
               ;;
           esac

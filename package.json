@@ -1,5 +1,5 @@
 {
-  "name": "ai-config",
+  "name": "@jankyz/ai-config",
   "version": "0.1.0",
   "description": "Reproducible environment manager for AI coding agents.",
   "license": "MIT",

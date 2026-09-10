@@ -15,21 +15,21 @@ Agent environments tend to drift as skills, local conventions, and tools are cop
 Preview the planned Codex setup first:
 
 ```bash
-npx ai-config setup --provider codex
+npx @jankyz/ai-config setup --provider codex
 ```
 
 Apply only after reviewing the preview:
 
 ```bash
-npx ai-config setup --provider codex --apply
+npx @jankyz/ai-config setup --provider codex --apply
 ```
 
 Check the environment and preview or apply updates with:
 
 ```bash
-npx ai-config doctor --provider codex
-npx ai-config update --provider codex
-npx ai-config update --provider codex --apply
+npx @jankyz/ai-config doctor --provider codex
+npx @jankyz/ai-config update --provider codex
+npx @jankyz/ai-config update --provider codex --apply
 ```
 
 ## Preview vs `--apply`
@@ -37,8 +37,8 @@ npx ai-config update --provider codex --apply
 `setup`, `update`, and `rollback` are previews by default. They mutate files only with `--apply`. If setup finds a differing file in an artifact it does not own, it reports a conflict and will not force-overwrite it. An exceptional replacement requires both the named `--replace-conflict <artifact-id>` and the exact preview fingerprint:
 
 ```bash
-npx ai-config setup --provider codex --replace-conflict codex.global.instructions
-npx ai-config setup --provider codex --replace-conflict codex.global.instructions --approve-preview <fingerprint> --apply
+npx @jankyz/ai-config setup --provider codex --replace-conflict codex.global.instructions
+npx @jankyz/ai-config setup --provider codex --replace-conflict codex.global.instructions --approve-preview <fingerprint> --apply
 ```
 
 ## What setup installs
@@ -58,8 +58,8 @@ ai-config installs its global canonical instructions, native/adapted workflow sk
 Every applied operation has a transaction ID. Preview or restore one explicitly:
 
 ```bash
-npx ai-config rollback --provider codex --transaction <uuid>
-npx ai-config rollback --provider codex --transaction <uuid> --apply
+npx @jankyz/ai-config rollback --provider codex --transaction <uuid>
+npx @jankyz/ai-config rollback --provider codex --transaction <uuid> --apply
 ```
 
 ## Ownership boundaries
