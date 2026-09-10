@@ -1,0 +1,65 @@
+name: Prepare GitHub release draft
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: write
+
+jobs:
+  release-draft:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          cache: npm
+      - name: Install the pinned npm CLI
+        run: npm install --global npm@11.16.0
+      - name: Verify release candidate identity and npm CLI
+        run: |
+          actual="$(npm --version)"
+          test "$actual" = "11.16.0"
+          node --input-type=module -e 'import { readFileSync } from "node:fs"; const pkg = JSON.parse(readFileSync("package.json", "utf8")); const tag = process.env.RELEASE_TAG; const validVersion = /^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$/.test(pkg.version); if (process.env.GITHUB_REPOSITORY !== "Jankyz/ai-config") throw new Error(`unexpected repository ${process.env.GITHUB_REPOSITORY}`); if (pkg.name !== "@jankyz/ai-config") throw new Error(`unexpected package ${pkg.name}`); if (!validVersion) throw new Error(`invalid package version ${pkg.version}`); if (tag !== `v${pkg.version}`) throw new Error(`tag ${tag} does not match package version v${pkg.version}`);'
+          test "$(git rev-parse "$RELEASE_TAG^{commit}")" = "$(git rev-parse HEAD)"
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run test:unit
+      - run: npm run test:integration
+      - run: npm run build
+      - run: npm run check
+      - run: npm run pack:check
+      - run: git diff --check
+      - name: Create a draft release when none exists
+        run: |
+          set +e
+          release="$(gh api --include "repos/${GITHUB_REPOSITORY}/releases/tags/${RELEASE_TAG}" 2>&1)"
+          status=$?
+          set -e
+          if [ "$status" -eq 0 ]; then
+            draft="$(printf '%s\n' "$release" | awk 'BEGIN { body = 0 } /^$/ { body = 1; next } body { print }' | node --input-type=module -e 'let body = ""; process.stdin.on("data", (chunk) => body += chunk).on("end", () => console.log(JSON.parse(body).draft));')"
+            if [ "$draft" = "true" ]; then
+              echo "RELEASE_DRAFT_ALREADY_EXISTS ${RELEASE_TAG}"
+            else
+              echo "RELEASE_ALREADY_PUBLISHED ${RELEASE_TAG}"
+            fi
+            exit 0
+          fi
+          if ! printf '%s' "$release" | grep -Eq 'HTTP/[0-9.]+ 404|HTTP 404'; then
+            echo "Could not determine whether GitHub Release ${RELEASE_TAG} exists:" >&2
+            printf '%s\n' "$release" >&2
+            exit "$status"
+          fi
+          version="${RELEASE_TAG#v}"
+          preamble="$(printf '## Install\n\nPreview:\n```bash\nnpx @jankyz/ai-config setup --provider codex\n```\n\nApply:\n```bash\nnpx @jankyz/ai-config setup --provider codex --apply\n```\n\nPackage: @jankyz/ai-config@%s\n' "$version")"
+          gh release create "$RELEASE_TAG" --verify-tag --draft --title "$RELEASE_TAG" --generate-notes --notes "$preamble"

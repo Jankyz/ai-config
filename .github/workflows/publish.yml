@@ -1,9 +1,8 @@
 name: Publish npm package
 
 on:
-  push:
-    tags:
-      - "v[0-9]*"
+  release:
+    types: [published]
 
 permissions:
   contents: read
@@ -12,20 +11,26 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.event.release.tag_name }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.release.tag_name }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
           package-manager-cache: false
-      - name: Require npm Trusted Publishing-compatible npm CLI
+      - name: Install the pinned npm CLI
+        run: npm install --global npm@11.16.0
+      - name: Verify release identity and npm CLI
         run: |
           actual="$(npm --version)"
-          node --input-type=module -e 'const actual = process.argv[1].split(".").map(Number); const required = [11, 5, 1]; for (let i = 0; i < required.length; i += 1) { if (actual[i] > required[i]) break; if (actual[i] < required[i]) throw new Error(`npm ${process.argv[1]} is below required 11.5.1`); }' "$actual"
-      - name: Verify tag matches package version
-        run: |
-          node --input-type=module -e 'import { readFileSync } from "node:fs"; const version = JSON.parse(readFileSync("package.json", "utf8")).version; if (process.env.GITHUB_REF_NAME !== `v${version}`) throw new Error(`tag ${process.env.GITHUB_REF_NAME} does not match package version v${version}`);'
+          test "$actual" = "11.16.0"
+          node --input-type=module -e 'import { readFileSync } from "node:fs"; const pkg = JSON.parse(readFileSync("package.json", "utf8")); const tag = process.env.RELEASE_TAG; const validVersion = /^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$/.test(pkg.version); if (process.env.GITHUB_REPOSITORY !== "Jankyz/ai-config") throw new Error(`unexpected repository ${process.env.GITHUB_REPOSITORY}`); if (pkg.name !== "@jankyz/ai-config") throw new Error(`unexpected package ${pkg.name}`); if (!validVersion) throw new Error(`invalid package version ${pkg.version}`); if (tag !== `v${pkg.version}`) throw new Error(`release tag ${tag} does not match package version v${pkg.version}`);'
+          test "$(git rev-parse "$RELEASE_TAG^{commit}")" = "$(git rev-parse HEAD)"
       - run: npm ci
       - run: npm run typecheck
       - run: npm run lint
