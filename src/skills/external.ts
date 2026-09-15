@@ -19,6 +19,7 @@ export interface ExternalSkillAsset {
   readonly name:
     | "codebase-design"
     | "wayfinder"
+    | "grill-with-docs"
     | "grill-me"
     | "grilling"
     | "writing-for-agents"
@@ -144,7 +145,7 @@ export async function externalSkillAssets(
   client: HttpClient = createHttpsClient(),
 ): Promise<readonly ExternalSkillAsset[]> {
   const { registry, lock } = await sourceState();
-  const [codebase, wayfinder, grillMe, grilling, writing, uiUx] =
+  const [codebase, wayfinder, grillWithDocs, grillMe, grilling, writing, uiUx] =
     await Promise.all([
       acquireLockedResource({
         client,
@@ -159,6 +160,13 @@ export async function externalSkillAssets(
         lock,
         sourceId: "matt-skills",
         resourceId: "matt-wayfinder",
+      }),
+      acquireLockedResource({
+        client,
+        registry,
+        lock,
+        sourceId: "matt-skills",
+        resourceId: "matt-grill-with-docs",
       }),
       acquireLockedResource({
         client,
@@ -193,6 +201,7 @@ export async function externalSkillAssets(
   return [
     { name: "codebase-design", files: codebase },
     { name: "wayfinder", files: wayfinder },
+    { name: "grill-with-docs", files: grillWithDocs },
     { name: "grill-me", files: grillMe },
     { name: "grilling", files: grilling },
     { name: "writing-for-agents", files: writing },

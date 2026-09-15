@@ -62,6 +62,12 @@
           "installable": true
         },
         {
+          "id": "matt-grill-with-docs",
+          "path": "skills/engineering/grill-with-docs",
+          "mode": "external-managed",
+          "installable": true
+        },
+        {
           "id": "matt-grill-me",
           "path": "skills/productivity/grill-me",
           "mode": "external-managed",

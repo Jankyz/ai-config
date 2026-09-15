@@ -95,6 +95,7 @@ export function codexCleanupContext(
         "aic-ui-review",
         "codebase-design",
         "wayfinder",
+        "grill-with-docs",
         "grill-me",
         "grilling",
         "writing-for-agents",

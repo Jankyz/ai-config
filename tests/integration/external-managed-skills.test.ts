@@ -38,6 +38,7 @@ describe("external-managed skills", () => {
     expect(plan.externalSkillNames).toEqual([
       "codebase-design",
       "wayfinder",
+      "grill-with-docs",
       "grill-me",
       "grilling",
       "writing-for-agents",
@@ -64,6 +65,12 @@ describe("external-managed skills", () => {
         "utf8",
       ),
     ).resolves.toContain("Wayfinding");
+    await expect(
+      readFile(
+        join(detection.paths.userSkillsRoot, "grill-with-docs", "SKILL.md"),
+        "utf8",
+      ),
+    ).resolves.toContain('Call the Skill tool twice, for "grilling"');
     await expect(
       readFile(
         join(detection.paths.userSkillsRoot, "grill-me", "SKILL.md"),

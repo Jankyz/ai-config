@@ -48,6 +48,16 @@ const sources: readonly FixtureSource[] = [
         ),
       },
       {
+        path: "skills/engineering/grill-with-docs",
+        directory: join(
+          fixtureRoot,
+          "matt",
+          "skills",
+          "engineering",
+          "grill-with-docs",
+        ),
+      },
+      {
         path: "skills/productivity/grill-me",
         directory: join(
           fixtureRoot,

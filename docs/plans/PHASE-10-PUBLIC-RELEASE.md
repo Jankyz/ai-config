@@ -330,6 +330,7 @@ aic-ui-generate
 ```text
 codebase-design
 wayfinder
+grill-with-docs
 grill-me
 grilling
 writing-for-agents
@@ -694,6 +695,7 @@ The public package test must prove runtime acquisition of:
 ```text
 codebase-design
 wayfinder
+grill-with-docs
 grill-me
 grilling
 writing-for-agents

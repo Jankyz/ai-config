@@ -51,6 +51,11 @@
           "digest": "ad7c599d6d15b86ec61b2fd705dc889ddee12d616e6ba2e1bf1370e233635fce"
         },
         {
+          "resourceId": "matt-grill-with-docs",
+          "path": "skills/engineering/grill-with-docs",
+          "digest": "4978e8f2ad4e7c84a0a7b626c915b905ea0d94206c3098670e03102e812a3251"
+        },
+        {
           "resourceId": "matt-grill-me",
           "path": "skills/productivity/grill-me",
           "digest": "e22a19be8ad5dfcde7d8afc151c832d167d1ef3d6d0b71d280529696512ed9ff"
